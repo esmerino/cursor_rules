@@ -19,7 +19,7 @@ This repository contains a curated set of development rules designed to enhance 
 2. Clone and copy the rules you need:
 
    ```bash
-   git clone git@github.com:Mawla/cursor_rules.git
+   git clone git@github.com:esmerino/cursor_rules.git
    cp cursor_rules/.cursor/rules/* your-project/.cursor/rules/
    ```
 
