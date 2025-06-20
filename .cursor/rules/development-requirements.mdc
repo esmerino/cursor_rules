@@ -7,131 +7,145 @@ alwaysApply: false
 
 ## Overview
 
-Core development requirements and standards for Next.js 14 applications.
+Core development requirements and standards for Rails applications.
 
 <rule>
 name: development_requirements
-description: Development requirements and standards for Next.js 14 applications
+description: Development requirements and standards for Rails applications
 version: 1.0.0
 author: Development Team
 date: 2024-01-01
-globs: ["app/**/*", "components/**/*", "pages/**/*"]
+globs: ["app/**/*", "config/**/*", "lib/**/*", "test/**/*"]
 tags:
-  - nextjs
-  - react
-  - typescript
+  - rails
+  - ruby
+  - javascript
   - development
 </rule>
 
 ## 1. Core Requirements
 
 1. Do not delete existing functionality unless necessary
-2. Use App Router: All components within `app` directory
-3. Implement Server Components by default
-4. Use modern TypeScript syntax
+2. Use standard Rails architecture (MVC)
+3. Implement Server-Side Rendered views by default
+4. Use modern Ruby and JavaScript (ES6+) syntax
 5. Follow responsive design with Tailwind CSS
-6. Create modular, reusable components
-7. Efficient data fetching with server components
-8. Use Next.js 14's metadata API for SEO
-9. Use Next.js Image component
-10. Ensure accessibility with ARIA
-11. Use error.tsx for error handling
-12. Use loading.tsx for loading states
-13. Use route.ts for API routes
-14. Implement SSG/SSR appropriately
+6. Create modular, reusable components (ViewComponents, partials, Stimulus controllers)
+7. Efficient data fetching within controllers
+8. Use appropriate gems for SEO (e.g., meta-tags)
+9. Use Active Storage for image handling
+10. Ensure accessibility with ARIA standards
+11. Use `rescue_from` for error handling in controllers
+12. Use Turbo Frames/Streams for loading states
+13. Use standard controllers and routes for API endpoints
+14. Implement SSR by default, use Turbo for SPA-like experience
 15. Focus only on task-related changes
-16. Use components over in-line html. If a component doesn't exist, check shadcn for it. If it doesn't exist there, create it.
+16. Use ViewComponents over complex partials. If a component doesn't exist, create it.
 
 ## 2. Code Standards
 
-### 2.1 Client Components
+### 2.1 Stimulus Controllers
 
-```tsx
-"use client";
-const ComponentName = () => {
-  // Component logic
-};
-```
+```javascript
+// app/javascript/controllers/component_name_controller.js
+import { Controller } from "@hotwired/stimulus"
 
-### 2.2 Props Interface
-
-```tsx
-interface ComponentNameProps {
-  // Props definition
-}
-const ComponentName = ({ prop1, prop2 }: ComponentNameProps) => {
-  // Component logic
-};
-```
-
-### 2.3 Server Components
-
-```tsx
-async function getData() {
-  const res = await fetch("https://api.example.com/data", {
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) throw new Error("Failed to fetch data");
-  return res.json();
+export default class extends Controller {
+  connect() {
+    // Component logic
+  }
 }
 ```
 
-### 2.4 Type Documentation
+### 2.2 ViewComponent
 
-```typescript
-/**
- * Clear description of the type's purpose and context.
- * Include any important notes about usage or constraints.
- */
-export interface ExampleType {
-  /** Description with value range if applicable (e.g., 0-1) */
-  numericField: number;
-  /** Description of what this field represents */
-  stringField: string;
-  /** Object field description */
-  objectField: {
-    /** Nested field description */
-    nestedField: string;
-  };
-}
+```ruby
+# app/components/component_name_component.rb
+class ComponentNameComponent < ViewComponent::Base
+  def initialize(prop1:, prop2:)
+    @prop1 = prop1
+    @prop2 = prop2
+  end
+end
 ```
 
-## 3. Type Documentation Rules
+### 2.3 Data Fetching in Controllers
 
-- Every exported type must have a JSDoc comment explaining its purpose
-- Each field must have an inline JSDoc comment
-- Include value ranges for numeric fields (e.g., 0-1, 0-100)
-- Document optional fields and their implications
-- Explain relationships with other types
-- Note any validation requirements
+```ruby
+# app/controllers/data_controller.rb
+class DataController < ApplicationController
+  def index
+    @data = fetch_data
+  end
+
+  private
+
+  def fetch_data
+    # In a real app, this would fetch from a service or external API
+    # Caching is recommended
+    Rails.cache.fetch("api_data", expires_in: 1.hour) do
+      response = Httparty.get("https://api.example.com/data")
+      if response.ok?
+        response.parsed_response
+      else
+        raise "Failed to fetch data"
+      end
+    end
+  end
+end
+```
+
+### 2.4 Service Objects
+
+```ruby
+# app/services/example_service.rb
+class ExampleService
+  def self.call(params)
+    new(params).call
+  end
+
+  def initialize(params)
+    @params = params
+  end
+
+  def call
+    # Business logic here
+  end
+end
+```
+
+## 3. Documentation Rules
+
+- Every public method in a model, controller, or service should have a YARD comment
+- Explain the purpose of the method, its parameters, and what it returns
+- Document optional parameters and their implications
+- Note any side effects or exceptions raised
 - Document any default values
-- Include usage examples for complex types
+- Include usage examples for complex methods
 
 ## 4. Component Guidelines
 
-### 4.1 Component Structure
+### 4.1 ViewComponent Structure
 
-- Use functional components with hooks
-- Implement proper TypeScript interfaces
-- Follow naming conventions
-- Use proper file extensions (.tsx for components)
+- Use initializers for passing data
+- Keep logic out of templates
+- Follow naming conventions (`component_name_component.rb`)
 - Organize imports logically
 
-### 4.2 State Management
+### 4.2 State Management (JavaScript)
 
-- Use React hooks for local state
-- Use Zustand for global state
-- Avoid prop drilling
-- Use context sparingly
-- Implement proper error boundaries
+- Use Stimulus controllers for local state within a DOM element's scope
+- Use data attributes to pass initial state from Rails to Stimulus
+- Avoid global JavaScript state when possible
+- Use custom events for communication between controllers
 
 ### 4.3 Performance
 
-- Use React.memo for expensive components
-- Implement proper dependency arrays
-- Use useMemo and useCallback appropriately
-- Optimize bundle size
-- Implement proper loading states
+- Use caching (fragment, Russian doll) for expensive view logic
+- Implement proper database indexing
+- Use `includes` and `joins` to avoid N+1 queries
+- Optimize asset bundling and delivery
+- Implement proper loading states with Turbo Frames
 
 ## 5. File Organization
 
@@ -139,51 +153,53 @@ export interface ExampleType {
 
 ```
 /app/
-├── actions/               # Server actions
-├── api/                  # API routes
-├── components/           # UI components
-│   ├── blocks/          # Content blocks
-│   └── ui/              # shadcn/UI components
-├── config/              # Configuration
-├── constants/           # Constants
-├── hooks/               # React hooks
-├── services/            # Business logic
-├── stores/              # State management
-├── types/               # TypeScript types
-└── utils/               # Utilities
+├── assets/
+├── channels/
+├── components/           # ViewComponents
+├── controllers/
+├── helpers/
+├── javascript/
+│   ├── controllers/      # Stimulus controllers
+│   └── utils/
+├── jobs/
+├── mailers/
+├── models/
+├── services/             # Service Objects
+├── validators/
+└── views/
 ```
 
 ### 5.2 Naming Conventions
 
-- Components: PascalCase (e.g., `UserProfile.tsx`)
-- Files: kebab-case (e.g., `user-profile.tsx`)
-- Functions: camelCase (e.g., `getUserData`)
+- Components: PascalCase (e.g., `UserProfileComponent.rb`)
+- Files: snake_case (e.g., `user_profile_component.rb`)
+- Functions/Methods: snake_case (e.g., `get_user_data`)
 - Constants: UPPER_SNAKE_CASE (e.g., `API_ENDPOINT`)
-- Types: PascalCase (e.g., `UserProfileProps`)
+- Classes/Modules: PascalCase (e.g., `UserProfile`)
 
 ## 6. Best Practices
 
 ### 6.1 Error Handling
 
-- Use error boundaries for component errors
-- Implement proper try-catch blocks
+- Use `rescue_from` in controllers for common errors
+- Implement proper `begin/rescue` blocks in services
 - Provide meaningful error messages
 - Log errors appropriately
-- Handle network errors gracefully
+- Handle network errors gracefully in API clients
 
 ### 6.2 Accessibility
 
-- Use semantic HTML elements
+- Use semantic HTML elements in views and components
 - Implement proper ARIA attributes
 - Ensure keyboard navigation
-- Provide alt text for images
+- Provide alt text for images (e.g., via Active Storage variants)
 - Test with screen readers
 
 ### 6.3 Testing
 
-- Write unit tests for components
-- Test user interactions
-- Mock external dependencies
+- Write model, controller, and system tests (RSpec or Minitest)
+- Test user interactions in system tests
+- Mock external services (e.g., with VCR)
 - Test error scenarios
 - Maintain good test coverage
 
@@ -192,23 +208,23 @@ export interface ExampleType {
 ### 7.1 Before Starting
 
 - Review existing codebase
-- Check for similar components
-- Plan component structure
+- Check for similar components or services
+- Plan model/controller/service structure
 - Consider reusability
 - Document requirements
 
 ### 7.2 During Development
 
-- Follow TypeScript best practices
+- Follow Rails and Ruby best practices
 - Use proper error handling
-- Implement loading states
-- Test functionality
-- Update documentation
+- Implement loading states with Turbo
+- Test functionality (TDD is encouraged)
+- Update documentation (YARD)
 
 ### 7.3 Before Committing
 
-- Run tests
-- Check for linting errors
+- Run tests (`bundle exec rspec`)
+- Check for linting errors (`bundle exec rubocop`)
 - Review code quality
 - Update documentation
-- Test in different environments
+- Test in a staging environment if possible

@@ -1,487 +1,683 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: false
 ---
 # Authentication Standards
 
 ## Overview
 
-Authentication standards and best practices for Next.js applications using Supabase.
+Authentication standards and best practices for Rails applications using Devise.
 
 <rule>
 name: authentication_standards
-description: Authentication standards and best practices for Next.js applications
+description: Authentication standards and best practices for Rails applications
 version: 1.0.0
 author: Development Team
 date: 2024-01-01
-globs: ["app/**/*", "components/**/*", "lib/**/*", "middleware.ts"]
+globs: ["app/**/*", "config/**/*", "lib/**/*", "test/**/*"]
 tags:
   - authentication
-  - supabase
+  - devise
   - security
-  - nextjs
+  - rails
 </rule>
 
-## 1. Supabase Integration
+## 1. Devise Setup
 
-### 1.1 Required Package
+### 1.1 Installation
 
-Use `@supabase/ssr` exclusively for Next.js integration:
+Add Devise to your Gemfile:
 
-- No direct usage of `@supabase/supabase-js`
-- Use `createServerClient` for server components
-- Use `createBrowserClient` for client components
-- Handle cookies through Server Actions
-
-### 1.2 Client Setup
-
-```typescript
-// lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-
-export function createClient() {
-  const cookieStore = cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            // Handle cookie setting error
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch (error) {
-            // Handle cookie removal error
-          }
-        },
-      },
-    }
-  )
-}
+```ruby
+# Gemfile
+gem 'devise'
+gem 'devise-i18n'  # For internationalization
+gem 'devise-security'  # For additional security features
 ```
 
-```typescript
-// lib/supabase/client.ts
-import { createBrowserClient } from '@supabase/ssr'
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-```
-
-## 2. Session Management
-
-### 2.1 Server Actions
-
-Use Server Actions for auth operations:
-
-```typescript
-// app/actions/auth.ts
-'use server'
-
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-
-export async function signIn(formData: FormData) {
-  const supabase = createClient()
-  
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  }
-
-  const { error } = await supabase.auth.signInWithPassword(data)
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  redirect('/dashboard')
-}
-
-export async function signOut() {
-  const supabase = createClient()
-  await supabase.auth.signOut()
-  redirect('/')
-}
-```
-
-### 2.2 Cookie Handling
-
-Implement proper cookie handling:
-
-```typescript
-// middleware.ts
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
-
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          supabaseResponse.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          supabaseResponse.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Handle protected routes
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  return supabaseResponse
-}
-
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-}
-```
-
-### 2.3 Session Refresh
-
-Add session refresh mechanism:
-
-```typescript
-// lib/auth/session.ts
-import { createClient } from '@/lib/supabase/server'
-
-export async function refreshSession() {
-  const supabase = createClient()
-  
-  const { data: { session }, error } = await supabase.auth.getSession()
-  
-  if (error) {
-    throw new Error('Failed to refresh session')
-  }
-  
-  return session
-}
-```
-
-## 3. Protected Routes
-
-### 3.1 AuthGuard Component
-
-Use AuthGuard component for protected routes:
-
-```typescript
-// components/auth/auth-guard.tsx
-'use client'
-
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { User } from '@supabase/supabase-js'
-
-interface AuthGuardProps {
-  children: React.ReactNode
-  requiredRole?: string
-}
-
-export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      setLoading(false)
-    }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  if (!user) {
-    return <div>Access denied. Please sign in.</div>
-  }
-
-  if (requiredRole && user.user_metadata?.role !== requiredRole) {
-    return <div>Access denied. Insufficient permissions.</div>
-  }
-
-  return <>{children}</>
-}
-```
-
-### 3.2 Role-Based Access
-
-Implement role-based access:
-
-```typescript
-// lib/auth/permissions.ts
-export const ROLES = {
-  ADMIN: 'admin',
-  USER: 'user',
-  MODERATOR: 'moderator',
-} as const
-
-export function hasPermission(userRole: string, requiredRole: string): boolean {
-  const roleHierarchy = {
-    [ROLES.ADMIN]: 3,
-    [ROLES.MODERATOR]: 2,
-    [ROLES.USER]: 1,
-  }
-
-  return roleHierarchy[userRole as keyof typeof roleHierarchy] >= 
-         roleHierarchy[requiredRole as keyof typeof roleHierarchy]
-}
-```
-
-## 4. Error Handling
-
-### 4.1 AuthErrorBoundary
-
-Use AuthErrorBoundary for authentication errors:
-
-```typescript
-// components/auth/auth-error-boundary.tsx
-'use client'
-
-import { Component, ReactNode } from 'react'
-
-interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-}
-
-interface State {
-  hasError: boolean
-  error?: Error
-}
-
-export class AuthErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
-  }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error: Error, errorInfo: any) {
-    console.error('Auth error:', error, errorInfo)
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div>
-          <h2>Authentication Error</h2>
-          <p>Something went wrong with authentication.</p>
-          <button onClick={() => this.setState({ hasError: false })}>
-            Try again
-          </button>
-        </div>
-      )
-    }
-
-    return this.props.children
-  }
-}
-```
-
-### 4.2 Retry Mechanisms
-
-Implement retry mechanisms:
-
-```typescript
-// lib/auth/retry.ts
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
-): Promise<T> {
-  let lastError: Error
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn()
-    } catch (error) {
-      lastError = error as Error
-      
-      if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
-      }
-    }
-  }
-
-  throw lastError!
-}
-```
-
-## 5. Security Best Practices
-
-### 5.1 Environment Variables
+Install and configure Devise:
 
 ```bash
-# .env.local
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+bundle install
+rails generate devise:install
+rails generate devise User
+rails db:migrate
 ```
 
-### 5.2 Token Management
+### 1.2 Configuration
 
-- Never store sensitive tokens in localStorage
-- Use httpOnly cookies for session tokens
+```ruby
+# config/initializers/devise.rb
+Devise.setup do |config|
+  # ==> Mailer Configuration
+  config.mailer_sender = 'please-change-me-at-config-initializers-devise@example.com'
+  
+  # ==> ORM configuration
+  require 'devise/orm/active_record'
+  
+  # ==> Configuration for any authentication mechanism
+  config.case_insensitive_keys = [:email]
+  config.strip_whitespace_keys = [:email]
+  config.skip_session_storage = [:http_auth]
+  config.stretches = Rails.env.test? ? 1 : 12
+  config.reconfirmable = true
+  config.expire_all_remember_me_on_sign_out = true
+  config.password_length = 6..128
+  config.email_regexp = /\A[^@\s]+@[^@\s]+\z/
+  config.reset_password_within = 6.hours
+  config.sign_out_via = :delete
+  
+  # ==> Navigation configuration
+  config.sign_out_via = :delete
+  
+  # ==> Timeout configuration
+  config.timeout_in = 30.minutes
+end
+```
+
+## 2. User Model
+
+### 2.1 Basic User Model
+
+```ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable,
+         :confirmable, :lockable, :trackable, :timeoutable
+
+  # Add role-based authorization
+  enum role: { user: 0, moderator: 1, admin: 2 }
+  
+  # Validations
+  validates :email, presence: true, uniqueness: true
+  validates :role, presence: true
+  
+  # Associations
+  has_many :posts, dependent: :destroy
+  has_many :comments, dependent: :destroy
+  
+  # Scopes
+  scope :active, -> { where(confirmed_at: !nil) }
+  scope :admins, -> { where(role: :admin) }
+  
+  # Methods
+  def admin?
+    role == 'admin'
+  end
+  
+  def moderator?
+    role == 'moderator' || admin?
+  end
+end
+```
+
+### 2.2 Migration
+
+```ruby
+# db/migrate/xxx_create_users.rb
+class CreateUsers < ActiveRecord::Migration[7.0]
+  def change
+    create_table :users do |t|
+      ## Database authenticatable
+      t.string :email,              null: false, default: ""
+      t.string :encrypted_password, null: false, default: ""
+
+      ## Recoverable
+      t.string   :reset_password_token
+      t.datetime :reset_password_sent_at
+
+      ## Rememberable
+      t.datetime :remember_created_at
+
+      ## Trackable
+      t.integer  :sign_in_count, default: 0, null: false
+      t.datetime :current_sign_in_at
+      t.datetime :last_sign_in_at
+      t.string   :current_sign_in_ip
+      t.string   :last_sign_in_ip
+
+      ## Confirmable
+      t.string   :confirmation_token
+      t.datetime :confirmed_at
+      t.datetime :confirmation_sent_at
+      t.string   :unconfirmed_email
+
+      ## Lockable
+      t.integer  :failed_attempts, default: 0, null: false
+      t.string   :unlock_token
+      t.datetime :locked_at
+
+      ## Role
+      t.integer :role, default: 0
+
+      t.timestamps null: false
+    end
+
+    add_index :users, :email,                unique: true
+    add_index :users, :reset_password_token, unique: true
+    add_index :users, :confirmation_token,   unique: true
+    add_index :users, :unlock_token,         unique: true
+  end
+end
+```
+
+## 3. Controllers
+
+### 3.1 Application Controller
+
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  before_action :authenticate_user!
+  before_action :configure_permitted_parameters, if: :devise_controller?
+
+  protected
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :role])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:name])
+  end
+
+  def require_admin
+    unless current_user&.admin?
+      redirect_to root_path, alert: 'Access denied. Admin privileges required.'
+    end
+  end
+
+  def require_moderator
+    unless current_user&.moderator?
+      redirect_to root_path, alert: 'Access denied. Moderator privileges required.'
+    end
+  end
+end
+```
+
+### 3.2 Custom Sessions Controller
+
+```ruby
+# app/controllers/users/sessions_controller.rb
+class Users::SessionsController < Devise::SessionsController
+  before_action :configure_sign_in_params, only: [:create]
+
+  protected
+
+  def configure_sign_in_params
+    devise_parameter_sanitizer.permit(:sign_in, keys: [:attribute])
+  end
+
+  def after_sign_in_path_for(resource)
+    if resource.admin?
+      admin_dashboard_path
+    elsif resource.moderator?
+      moderator_dashboard_path
+    else
+      dashboard_path
+    end
+  end
+
+  def after_sign_out_path_for(resource_or_scope)
+    root_path
+  end
+end
+```
+
+### 3.3 Custom Registrations Controller
+
+```ruby
+# app/controllers/users/registrations_controller.rb
+class Users::RegistrationsController < Devise::RegistrationsController
+  before_action :configure_sign_up_params, only: [:create]
+  before_action :configure_account_update_params, only: [:update]
+
+  protected
+
+  def configure_sign_up_params
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :role])
+  end
+
+  def configure_account_update_params
+    devise_parameter_sanitizer.permit(:account_update, keys: [:name])
+  end
+
+  def after_sign_up_path_for(resource)
+    if resource.confirmed?
+      dashboard_path
+    else
+      new_user_confirmation_path
+    end
+  end
+end
+```
+
+## 4. Routes
+
+### 4.1 Route Configuration
+
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  devise_for :users, controllers: {
+    sessions: 'users/sessions',
+    registrations: 'users/registrations',
+    confirmations: 'users/confirmations',
+    passwords: 'users/passwords'
+  }
+
+  # Protected routes
+  authenticate :user do
+    resources :posts
+    resources :comments
+    get 'dashboard', to: 'dashboard#index'
+  end
+
+  # Admin routes
+  authenticate :user, lambda { |u| u.admin? } do
+    namespace :admin do
+      resources :users
+      resources :posts
+      get 'dashboard', to: 'dashboard#index'
+    end
+  end
+
+  # Moderator routes
+  authenticate :user, lambda { |u| u.moderator? } do
+    namespace :moderator do
+      resources :posts, only: [:index, :show, :update]
+      get 'dashboard', to: 'dashboard#index'
+    end
+  end
+
+  root 'home#index'
+end
+```
+
+## 5. Views
+
+### 5.1 Login Form
+
+```erb
+<!-- app/views/devise/sessions/new.html.erb -->
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Sign in to your account
+      </h2>
+    </div>
+    
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "mt-8 space-y-6" }) do |f| %>
+      <div class="rounded-md shadow-sm -space-y-px">
+        <div>
+          <%= f.label :email, class: "sr-only" %>
+          <%= f.email_field :email, autocomplete: "email", required: true, 
+              class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
+              placeholder: "Email address" %>
+        </div>
+        <div>
+          <%= f.label :password, class: "sr-only" %>
+          <%= f.password_field :password, autocomplete: "current-password", required: true,
+              class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
+              placeholder: "Password" %>
+        </div>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <%= f.check_box :remember_me, class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" %>
+            <%= f.label :remember_me, class: "ml-2 block text-sm text-gray-900" %>
+          </div>
+
+          <div class="text-sm">
+            <%= link_to "Forgot your password?", new_password_path(resource_name), class: "font-medium text-indigo-600 hover:text-indigo-500" %>
+          </div>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.submit "Sign in", class: "group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+```
+
+### 5.2 Registration Form
+
+```erb
+<!-- app/views/devise/registrations/new.html.erb -->
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Create your account
+      </h2>
+    </div>
+    
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "mt-8 space-y-6" }) do |f| %>
+      <%= render "devise/shared/error_messages", resource: resource %>
+      
+      <div class="rounded-md shadow-sm -space-y-px">
+        <div>
+          <%= f.label :email, class: "sr-only" %>
+          <%= f.email_field :email, autocomplete: "email", required: true,
+              class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
+              placeholder: "Email address" %>
+        </div>
+        <div>
+          <%= f.label :password, class: "sr-only" %>
+          <%= f.password_field :password, autocomplete: "new-password", required: true,
+              class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
+              placeholder: "Password" %>
+        </div>
+        <div>
+          <%= f.label :password_confirmation, class: "sr-only" %>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password", required: true,
+              class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
+              placeholder: "Confirm password" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.submit "Sign up", class: "group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+```
+
+## 6. JavaScript Integration
+
+### 6.1 Authentication State
+
+```javascript
+// app/javascript/controllers/auth_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["userMenu", "loginButton", "logoutButton"]
+
+  connect() {
+    this.checkAuthState()
+  }
+
+  checkAuthState() {
+    // Check if user is authenticated via meta tag or data attribute
+    const isAuthenticated = document.querySelector('meta[name="user-authenticated"]')?.content === 'true'
+    
+    if (isAuthenticated) {
+      this.showUserMenu()
+    } else {
+      this.showLoginButton()
+    }
+  }
+
+  showUserMenu() {
+    if (this.hasUserMenuTarget) {
+      this.userMenuTarget.classList.remove('hidden')
+    }
+    if (this.hasLoginButtonTarget) {
+      this.loginButtonTarget.classList.add('hidden')
+    }
+  }
+
+  showLoginButton() {
+    if (this.hasUserMenuTarget) {
+      this.userMenuTarget.classList.add('hidden')
+    }
+    if (this.hasLoginButtonTarget) {
+      this.loginButtonTarget.classList.remove('hidden')
+    }
+  }
+
+  logout(event) {
+    event.preventDefault()
+    
+    if (confirm('Are you sure you want to sign out?')) {
+      const form = document.createElement('form')
+      form.method = 'DELETE'
+      form.action = '/users/sign_out'
+      document.body.appendChild(form)
+      form.submit()
+    }
+  }
+}
+```
+
+### 6.2 CSRF Protection
+
+```javascript
+// app/javascript/utils/csrf.js
+export function getCSRFToken() {
+  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+}
+
+export function setupCSRF() {
+  const token = getCSRFToken()
+  
+  if (token) {
+    // Set default headers for fetch requests
+    const originalFetch = window.fetch
+    window.fetch = function(url, options = {}) {
+      options.headers = {
+        'X-CSRF-Token': token,
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+      return originalFetch(url, options)
+    }
+  }
+}
+```
+
+## 7. Security Best Practices
+
+### 7.1 Environment Variables
+
+```bash
+# .env
+SECRET_KEY_BASE=your_secret_key_base
+DEVISE_SECRET_KEY=your_devise_secret_key
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@example.com
+SMTP_PASSWORD=your_email_password
+```
+
+### 7.2 Token Management
+
+- Use secure session storage
 - Implement proper token cleanup
-- Set appropriate token expiration times
+- Set appropriate session timeouts
+- Use HTTPS in production
 
-### 5.3 Input Validation
+### 7.3 Input Validation
 
-```typescript
-// lib/auth/validation.ts
-import { z } from 'zod'
+```ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable
 
-export const signInSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
-
-export const signUpSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-})
+  validates :email, presence: true, 
+            uniqueness: { case_sensitive: false },
+            format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :password, length: { minimum: 8 }, 
+            if: -> { new_record? || !password.nil? }
+  validates :password_confirmation, presence: true, 
+            if: -> { new_record? || !password.nil? }
+  
+  validate :password_complexity, if: -> { new_record? || !password.nil? }
+  
+  private
+  
+  def password_complexity
+    return if password.blank?
+    
+    unless password.match?(/\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+      errors.add :password, 'must include at least one lowercase letter, one uppercase letter, and one digit'
+    end
+  end
+end
 ```
 
-## 6. Testing Authentication
+## 8. Testing Authentication
 
-### 6.1 Test Setup
+### 8.1 Test Setup
 
-```typescript
-// __tests__/auth.test.ts
-import { render, screen, fireEvent } from '@testing-library/react'
-import { AuthGuard } from '@/components/auth/auth-guard'
-
-// Mock Supabase client
-jest.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({
-    auth: {
-      getUser: jest.fn(),
-      onAuthStateChange: jest.fn(),
-    },
-  }),
-}))
-
-describe('AuthGuard', () => {
-  it('should render children when user is authenticated', () => {
-    // Test implementation
-  })
-
-  it('should show loading state initially', () => {
-    // Test implementation
-  })
-
-  it('should redirect when user is not authenticated', () => {
-    // Test implementation
-  })
-})
+```ruby
+# spec/rails_helper.rb
+RSpec.configure do |config|
+  config.include Devise::Test::ControllerHelpers, type: :controller
+  config.include Devise::Test::IntegrationHelpers, type: :request
+  config.include Devise::Test::IntegrationHelpers, type: :system
+end
 ```
 
-## 7. Monitoring and Logging
+### 8.2 Controller Tests
 
-### 7.1 Auth Events
+```ruby
+# spec/controllers/posts_controller_spec.rb
+require 'rails_helper'
 
-```typescript
-// lib/auth/monitoring.ts
-import { logger } from '@/lib/logger'
+RSpec.describe PostsController, type: :controller do
+  let(:user) { create(:user) }
+  let(:admin) { create(:user, :admin) }
 
-export function logAuthEvent(event: string, data?: any) {
-  logger.info(`Auth event: ${event}`, data)
-}
+  describe 'GET #index' do
+    context 'when user is authenticated' do
+      before { sign_in user }
 
-export function logAuthError(error: Error, context?: any) {
-  logger.error('Authentication error', error, context)
-}
+      it 'returns http success' do
+        get :index
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    context 'when user is not authenticated' do
+      it 'redirects to sign in' do
+        get :index
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+  end
+
+  describe 'POST #create' do
+    context 'when user is admin' do
+      before { sign_in admin }
+
+      it 'creates a new post' do
+        expect {
+          post :create, params: { post: { title: 'Test', content: 'Content' } }
+        }.to change(Post, :count).by(1)
+      end
+    end
+  end
+end
 ```
 
-### 7.2 Security Monitoring
+### 8.3 System Tests
+
+```ruby
+# spec/system/authentication_spec.rb
+require 'rails_helper'
+
+RSpec.describe 'Authentication', type: :system do
+  let(:user) { create(:user) }
+
+  it 'allows user to sign in' do
+    visit new_user_session_path
+    
+    fill_in 'Email', with: user.email
+    fill_in 'Password', with: user.password
+    click_button 'Sign in'
+    
+    expect(page).to have_content('Signed in successfully')
+  end
+
+  it 'prevents access to protected pages when not signed in' do
+    visit dashboard_path
+    
+    expect(page).to have_content('You need to sign in or sign up before continuing')
+  end
+end
+```
+
+## 9. Monitoring and Logging
+
+### 9.1 Auth Events
+
+```ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable,
+         :trackable
+
+  after_create :log_user_creation
+  after_update :log_user_update, if: :saved_change_to_role?
+
+  private
+
+  def log_user_creation
+    Rails.logger.info "User created: #{email} with role: #{role}"
+  end
+
+  def log_user_update
+    Rails.logger.info "User role updated: #{email} from #{role_previous_change[0]} to #{role}"
+  end
+end
+```
+
+### 9.2 Security Monitoring
 
 - Monitor failed login attempts
 - Track suspicious activity
 - Log authentication events
 - Monitor session duration
 - Track role changes
+
+## 10. Additional Security Features
+
+### 10.1 Two-Factor Authentication
+
+```ruby
+# Add to Gemfile
+gem 'devise-two-factor'
+
+# Add to User model
+class User < ApplicationRecord
+  devise :two_factor_authenticatable,
+         :two_factor_backupable,
+         otp_secret_encryption_key: Rails.application.credentials.otp_key
+end
+```
+
+### 10.2 Account Locking
+
+```ruby
+# config/initializers/devise.rb
+config.maximum_attempts = 5
+config.unlock_strategy = :both
+config.unlock_in = 1.hour
+```
+
+### 10.3 Password Expiration
+
+```ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  validate :password_not_expired
+
+  private
+
+  def password_not_expired
+    return unless password_changed_at
+    return unless password_changed_at < 90.days.ago
+    
+    errors.add(:password, 'has expired. Please change your password.')
+  end
+end
+```

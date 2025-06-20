@@ -7,21 +7,22 @@ alwaysApply: false
 
 ## Overview
 
-Standards and practices for implementing observability in Next.js applications, including monitoring, logging, and debugging.
+Standards and practices for implementing observability in Rails applications, including monitoring, logging, and debugging.
 
 <rule>
 name: observability
-description: Standards for implementing observability in Next.js applications
+description: Standards for implementing observability in Rails applications
 version: 1.0.0
 author: Development Team
 date: 2024-01-01
-globs: ["app/**/*", "lib/**/*", "components/**/*", "middleware.ts"]
+globs: ["app/**/*", "lib/**/*", "config/**/*", "test/**/*"]
 tags:
   - observability
   - monitoring
   - logging
   - debugging
   - performance
+  - rails
 </rule>
 
 ## 1. System Monitoring
@@ -61,16 +62,16 @@ tags:
 
 ### 2.2 Logging Methods
 
-```typescript
-logger.debug(message: string, data?: any)
-logger.info(message: string, data?: any)
-logger.warn(message: string, data?: any)
-logger.error(message: string, error?: any, data?: any)
+```javascript
+logger.debug(message, data)
+logger.info(message, data)
+logger.warn(message, data)
+logger.error(message, error, data)
 ```
 
 ### 2.3 Error Handling
 
-```typescript
+```javascript
 try {
   // Operation that may fail
 } catch (error) {
@@ -80,7 +81,7 @@ try {
 
 ### 2.4 Common Log Patterns
 
-```typescript
+```javascript
 // Feature initialization
 logger.info("Feature initialized", { featureId, config });
 
@@ -105,7 +106,7 @@ logger.info("UI update", { component, change, reason });
 
 ### 3.1 Development Tools
 
-- Use React DevTools
+- Use browser developer tools
 - Enable source maps
 - Use browser debugger
 - Enable verbose logging
@@ -157,11 +158,11 @@ logger.info("UI update", { component, change, reason });
 
 ### 5.1 Core Web Vitals
 
-```typescript
-// lib/analytics/web-vitals.ts
+```javascript
+// app/javascript/lib/analytics/web-vitals.js
 import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals'
 
-function sendToAnalytics(metric: any) {
+function sendToAnalytics(metric) {
   logger.info('Web Vital', {
     name: metric.name,
     value: metric.value,
@@ -180,17 +181,17 @@ export function reportWebVitals() {
 
 ### 5.2 Custom Metrics
 
-```typescript
-// lib/analytics/custom-metrics.ts
-export function trackPageLoad(page: string, loadTime: number) {
+```javascript
+// app/javascript/lib/analytics/custom-metrics.js
+export function trackPageLoad(page, loadTime) {
   logger.info('Page Load', { page, loadTime })
 }
 
-export function trackComponentRender(component: string, renderTime: number) {
+export function trackComponentRender(component, renderTime) {
   logger.debug('Component Render', { component, renderTime })
 }
 
-export function trackApiCall(endpoint: string, duration: number, status: number) {
+export function trackApiCall(endpoint, duration, status) {
   logger.info('API Call', { endpoint, duration, status })
 }
 ```
@@ -199,34 +200,22 @@ export function trackApiCall(endpoint: string, duration: number, status: number)
 
 ### 6.1 Error Boundaries
 
-```typescript
-// components/error-boundary.tsx
-'use client'
-
-import { Component, ReactNode } from 'react'
+```javascript
+// app/javascript/components/error-boundary.js
+import { Component } from 'react'
 import { logger } from '@/lib/logger'
 
-interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-}
-
-interface State {
-  hasError: boolean
-  error?: Error
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+export class ErrorBoundary extends Component {
+  constructor(props) {
     super(props)
     this.state = { hasError: false }
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error) {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error, errorInfo) {
     logger.error('Error boundary caught error', error, errorInfo)
   }
 
@@ -247,8 +236,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
 ### 6.2 Global Error Handler
 
-```typescript
-// lib/error-handler.ts
+```javascript
+// app/javascript/lib/error-handler.js
 import { logger } from '@/lib/logger'
 
 export function setupGlobalErrorHandling() {
@@ -274,31 +263,28 @@ export function setupGlobalErrorHandling() {
 
 ### 7.1 Request/Response Logging
 
-```typescript
-// lib/api/monitoring.ts
+```javascript
+// app/javascript/lib/api/monitoring.js
 import { logger } from '@/lib/logger'
 
-export function logApiRequest(endpoint: string, method: string, params?: any) {
+export function logApiRequest(endpoint, method, params) {
   logger.debug('API Request', { endpoint, method, params })
 }
 
-export function logApiResponse(endpoint: string, status: number, data?: any, duration?: number) {
+export function logApiResponse(endpoint, status, data, duration) {
   logger.info('API Response', { endpoint, status, data, duration })
 }
 
-export function logApiError(endpoint: string, error: Error, params?: any) {
+export function logApiError(endpoint, error, params) {
   logger.error('API Error', error, { endpoint, params })
 }
 ```
 
 ### 7.2 Performance Tracking
 
-```typescript
-// lib/api/performance.ts
-export async function withPerformanceTracking<T>(
-  operation: string,
-  fn: () => Promise<T>
-): Promise<T> {
+```javascript
+// app/javascript/lib/api/performance.js
+export async function withPerformanceTracking(operation, fn) {
   const start = performance.now()
   
   try {
@@ -309,7 +295,7 @@ export async function withPerformanceTracking<T>(
     return result
   } catch (error) {
     const duration = performance.now() - start
-    logger.error('Operation failed', error as Error, { operation, duration })
+    logger.error('Operation failed', error, { operation, duration })
     throw error
   }
 }
@@ -319,32 +305,32 @@ export async function withPerformanceTracking<T>(
 
 ### 8.1 Event Tracking
 
-```typescript
-// lib/analytics/events.ts
+```javascript
+// app/javascript/lib/analytics/events.js
 import { logger } from '@/lib/logger'
 
-export function trackEvent(event: string, properties?: Record<string, any>) {
+export function trackEvent(event, properties) {
   logger.info('User Event', { event, properties })
 }
 
-export function trackPageView(page: string, properties?: Record<string, any>) {
+export function trackPageView(page, properties) {
   logger.info('Page View', { page, properties })
 }
 
-export function trackUserAction(action: string, userId?: string, details?: any) {
+export function trackUserAction(action, userId, details) {
   logger.info('User Action', { action, userId, details })
 }
 ```
 
 ### 8.2 Feature Usage
 
-```typescript
-// lib/analytics/features.ts
-export function trackFeatureUsage(feature: string, userId?: string, context?: any) {
+```javascript
+// app/javascript/lib/analytics/features.js
+export function trackFeatureUsage(feature, userId, context) {
   logger.info('Feature Usage', { feature, userId, context })
 }
 
-export function trackFeatureError(feature: string, error: Error, context?: any) {
+export function trackFeatureError(feature, error, context) {
   logger.error('Feature Error', error, { feature, context })
 }
 ```
@@ -361,8 +347,8 @@ export function trackFeatureError(feature: string, error: Error, context?: any) 
 
 ### 9.2 Alerting Rules
 
-```typescript
-// lib/monitoring/alerts.ts
+```javascript
+// app/javascript/lib/monitoring/alerts.js
 export const ALERT_THRESHOLDS = {
   pageLoadTime: 3000, // 3 seconds
   apiResponseTime: 2000, // 2 seconds
@@ -370,7 +356,7 @@ export const ALERT_THRESHOLDS = {
   memoryUsage: 0.8, // 80%
 }
 
-export function checkAlertThresholds(metrics: any) {
+export function checkAlertThresholds(metrics) {
   if (metrics.pageLoadTime > ALERT_THRESHOLDS.pageLoadTime) {
     logger.warn('Page load time exceeded threshold', { 
       actual: metrics.pageLoadTime, 
@@ -402,8 +388,8 @@ export function checkAlertThresholds(metrics: any) {
 
 ### 10.3 Environment Configuration
 
-```typescript
-// lib/config/environment.ts
+```javascript
+// app/javascript/lib/config/environment.js
 export const isDevelopment = process.env.NODE_ENV === 'development'
 export const isProduction = process.env.NODE_ENV === 'production'
 
