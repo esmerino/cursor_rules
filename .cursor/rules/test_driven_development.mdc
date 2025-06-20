@@ -1,20 +1,13 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 name: test_driven_development
 description: Standards for Test-Driven Development in the Social Script project
 version: 1.0.0
 author: Dan
-date: 2024-02-11
-globs:
-  - "app/services/**/*_service.rb"
-  - "spec/**/*_spec.rb"
-  - "test/**/*_test.rb"
-tags:
-  - testing
-  - tdd
-  - specs
-  - services
----
-
 # Test-Driven Development (TDD) Rule
 
 <rule>
@@ -24,64 +17,63 @@ filters:
   - type: file_extension
     pattern: "\\.(rb|rake)$"
   - type: directory
-    pattern: "(spec|test|app/services)"
+    pattern: "(test|app/services)"
   - type: content
-    pattern: "RSpec\\.describe|describe.*do"
+    pattern: "Minitest::Test|class.*< Minitest::Test"
 actions:
   - type: suggest
     message: |
       Test-Driven Development Rules:
 
-      1. Spec First, Code Second:
-         - ALWAYS check for existing specs
-         - Create specs BEFORE implementation
-         - Use specs as documentation
+      1. Test First, Code Second:
+         - SEMPRE verifique se já existem testes
+         - Crie testes ANTES da implementação
+         - Use testes como documentação
 
-      2. Implementation Process:
-         a) Review/Create Specs
-         b) Run Specs (should fail)
-         c) Implement Code
-         d) Run Specs (should pass)
-         e) Refactor
+      2. Processo de Implementação:
+         a) Revise/Crie Testes
+         b) Rode os testes (devem falhar)
+         c) Implemente o código
+         d) Rode os testes (devem passar)
+         e) Refatore
 
-      3. Spec Structure:
+      3. Estrutura dos Testes:
          ```ruby
-         RSpec.describe ServiceName do
-           shared_examples "behavior" do
-             it "defines functionality"
-             it "handles edge cases"
+         class ServiceNameTest < Minitest::Test
+           def test_funcionalidade
+             # verifica funcionalidade
            end
 
-           context "conditions" do
-             it "behaves correctly"
+           def test_casos_limite
+             # verifica casos de borda
            end
          end
          ```
 
-      4. Validation Steps:
-         - Check spec location
-         - Review existing specs
-         - Create missing specs
-         - Follow spec requirements
+      4. Validação de Passos:
+         - Verifique localização dos testes
+         - Revise testes existentes
+         - Crie testes faltantes
+         - Siga requisitos dos testes
 
       5. Error Prevention:
-         - No implementation without specs
-         - No skipping edge cases
-         - No failing specs
-         - No manual testing only
+         - Não implemente sem testes
+         - Não pule casos de borda
+         - Não deixe testes falhando
+         - Não faça apenas testes manuais
 examples:
   - input: |
-      # Bad: Implementation without specs
+      # Ruim: Implementação sem testes
       class MyService
         def call
-          # Code without tests
+          # Código sem testes
         end
       end
 
-      # Good: Spec first
-      RSpec.describe MyService do
-        describe "#call" do
-          it "performs the expected action"
+      # Bom: Teste primeiro
+      class MyServiceTest < Minitest::Test
+        def test_call
+          assert_equal :esperado, MyService.new.call
         end
       end
 metadata:
@@ -98,54 +90,42 @@ metadata:
 
 ## Implementation Guide
 
-1. **Finding Existing Specs**
+1. **Encontrando Testes Existentes**
    ```bash
-   find spec/ -name "*_spec.rb" | grep $FEATURE_NAME
+   find test/ -name "*_test.rb" | grep $FEATURE_NAME
    ```
 
-2. **Creating New Specs**
+2. **Criando Novos Testes**
    ```ruby
-   # spec/services/my_service_spec.rb
-   RSpec.describe MyService do
-     let(:subject) { described_class.new }
-
-     describe "#call" do
-       context "with valid input" do
-         it "succeeds" do
-           expect(subject.call).to be_success
-         end
-       end
-
-       context "with invalid input" do
-         it "fails gracefully" do
-           expect(subject.call).to be_failure
-         end
-       end
+   # test/services/my_service_test.rb
+   class MyServiceTest < Minitest::Test
+     def test_call
+       assert_equal :esperado, MyService.new.call
      end
    end
    ```
 
-3. **Running Specs**
+3. **Executando Testes**
    ```bash
-   bundle exec rspec spec/services/my_service_spec.rb
+   bin/rails test test/services/my_service_test.rb
    ```
 
-4. **Implementation**
+4. **Implementação**
    ```ruby
    # app/services/my_service.rb
    class MyService
      def call
-       # Implementation following spec requirements
+       # Implementation following test requirements
      end
    end
    ```
 
 ## Best Practices
 
-1. **Spec Organization**
-   - One spec file per class/module
-   - Logical grouping of contexts
-   - Clear, descriptive test names
+1. **Organização dos Testes**
+   - Um arquivo de teste por classe/módulo
+   - Agrupamento lógico de métodos de teste
+   - Nomes de teste claros e descritivos
 
 2. **Test Coverage**
    - Happy path scenarios
@@ -153,17 +133,17 @@ metadata:
    - Error conditions
    - Boundary values
 
-3. **Maintainability**
-   - DRY specs using shared examples
-   - Clear setup using let/before
-   - Isolated tests
-   - Meaningful assertions
+3. **Manutenibilidade**
+   - DRY usando métodos auxiliares
+   - Setup claro usando setup/before
+   - Testes isolados
+   - Asserções significativas
 
-4. **Documentation**
-   - Specs serve as documentation
-   - Clear descriptions
-   - Example usage
-   - Edge case documentation
+4. **Documentação**
+   - Testes servem como documentação
+   - Descrições claras
+   - Exemplos de uso
+   - Documentação de casos de borda
 
 ## Overview
 
@@ -171,65 +151,57 @@ This rule establishes Test-Driven Development (TDD) as the standard approach for
 
 ## Core Principles
 
-1. **Spec First, Code Second**
-   - ALWAYS check for existing specs before modifying or creating code
-   - If no spec exists, create one BEFORE implementing the feature
-   - Use specs to define the expected behavior and interface
+1. **Test First, Code Second**
+   - SEMPRE verifique se já existem testes before modifying or creating code
+   - If no test exists, create one BEFORE implementing the feature
+   - Use tests to define the expected behavior and interface
 
-2. **Spec Structure**
+2. **Estrutura dos Testes**
    ```ruby
-   RSpec.describe ServiceName do
-     # Shared examples for common behavior
-     shared_examples 'expected behavior' do
-       it 'defines core functionality'
-       it 'handles edge cases'
-       it 'validates inputs'
+   class ServiceNameTest < Minitest::Test
+     def test_funcionalidade
+       # verifica funcionalidade principal
      end
 
-     # Context-specific test cases
-     context 'with specific conditions' do
-       it 'behaves as expected'
+     def test_casos_limite
+       # verifica casos de borda
      end
    end
    ```
 
-3. **Implementation Process**
-   a. Review existing specs (if any)
-   b. Write new specs defining expected behavior
-   c. Run specs (they should fail)
-   d. Implement code to make specs pass
-   e. Refactor while keeping specs green
+3. **Processo de Implementação**
+   a. Review existing tests (if any)
+   b. Write new tests defining expected behavior
+   c. Run tests (they should fail)
+   d. Implement code to make tests pass
+   e. Refactor while keeping tests green
 
 ## Example from TranscriptFetcher
 
 Good:
 ```ruby
-# First: Review transcript_parser_spec.rb
-RSpec.describe TranscriptParser::Parser do
-  let(:fixtures_path) { Rails.root.join('spec/fixtures/files') }
-  
-  shared_examples 'a transcript parser' do |format|
-    it 'returns a Transcript object'
-    it 'includes properly structured segments'
-    it 'provides access to unique speakers'
+# First: Review transcript_parser_test.rb
+class TranscriptParserParserTest < Minitest::Test
+  def test_retorna_transcript
+    # verifica retorno
   end
-  
-  context 'with specific format' do
-    it 'handles format correctly'
+
+  def test_segmentos_estruturados
+    # verifica segmentos
   end
 end
 
-# Then: Implement service based on spec
+# Then: Implement service based on test
 class TranscriptFetcherService
   def call
-    # Implementation follows spec requirements
+    # Implementation follows test requirements
   end
 end
 ```
 
 Bad:
 ```ruby
-# Writing implementation first without specs
+# Writing implementation first without tests
 class TranscriptFetcherService
   def call
     # Implementation without clear requirements
@@ -243,73 +215,69 @@ end
 
 Before implementing any service or complex code:
 
-1. **Spec Location Check**
+1. **Verificação de Localização dos Testes**
    ```bash
-   find spec/ -name "*_spec.rb" | grep $FEATURE_NAME
+   find test/ -name "*_test.rb" | grep $FEATURE_NAME
    ```
 
-2. **Spec Review**
-   - Read all related specs
+2. **Revisão dos Testes**
+   - Read all related tests
    - Understand shared examples
    - Note edge cases
    - Review fixtures
 
-3. **Spec Creation (if needed)**
-   - Create spec file
-   - Define shared examples
+3. **Criação de Testes (se necessário)**
+   - Create test file
+   - Write comprehensive tests
    - Write context-specific tests
-   - Include edge cases
-   - Add appropriate fixtures
+   - Add edge case tests
 
-4. **Implementation**
-   - Follow spec requirements
-   - Run specs frequently
-   - Refactor when needed
-   - Maintain test coverage
+4. **Implementação**
+   - Follow test requirements
+   - Run tests frequently
+   - Keep tests green
 
 ## Common Patterns
 
-1. **Service Specs**
+1. **Service Tests**
    ```ruby
-   RSpec.describe ServiceName do
-     describe '#call' do
-       context 'with valid input' do
-         it 'performs expected action'
-       end
+   class ServiceNameTest < Minitest::Test
+     def test_funcionalidade
+       # verifica funcionalidade principal
+     end
 
-       context 'with invalid input' do
-         it 'handles errors appropriately'
-       end
+     def test_casos_limite
+       # verifica casos de borda
      end
    end
    ```
 
-2. **Model Specs**
+2. **Model Tests**
    ```ruby
-   RSpec.describe ModelName do
-     describe 'validations' do
-       it { should validate_presence_of(:field) }
+   class ServiceNameTest < Minitest::Test
+     def test_funcionalidade
+       # verifica funcionalidade principal
      end
 
-     describe 'associations' do
-       it { should belong_to(:other_model) }
+     def test_casos_limite
+       # verifica casos de borda
      end
    end
    ```
 
 ## Error Prevention
 
-1. Never start implementation without specs
-2. Don't modify existing code without reviewing specs
+1. Never start implementation without tests
+2. Don't modify existing code without reviewing tests
 3. Don't skip writing tests for edge cases
-4. Don't leave failing specs unresolved
+4. Don't leave failing tests unresolved
 
 ## Examples
 
 ### Good Process
-1. Check for specs
-2. Review existing specs
-3. Write new specs
+1. Check for tests
+2. Review existing tests
+3. Write new tests
 4. Implement feature
 5. Refactor
 
@@ -317,12 +285,12 @@ Before implementing any service or complex code:
 1. Start coding immediately
 2. Test manually
 3. Fix bugs as they appear
-4. Write specs later (or never)
+4. Write tests later (or never)
 
 ## References
 
 - Full documentation in `docs/reference-docs/tdd.md`
-- RSpec documentation
+- Minitest documentation
 - Factory Bot documentation
 - VCR documentation
 
@@ -330,19 +298,19 @@ Before implementing any service or complex code:
 
 The AI assistant should:
 
-1. ALWAYS check for existing specs first
-2. Suggest creating specs if none exist
-3. Follow TDD principles
-4. Reference relevant specs in responses
-5. Maintain test coverage
-6. Prevent implementation without specs
+1. ALWAYS check for existing tests first
+2. Suggest creating tests if none exist
+3. Follow test requirements
+4. Reference relevant tests in responses
+5. Keep tests green
+6. Prevent implementation without tests
 
 ## Examples
 
-### Finding Specs
+### Finding Tests
 ```bash
 # Good
-find spec/ -name "*transcript*_spec.rb"
+find test/ -name "*transcript*_test.rb"
 
 # Bad
 Start implementing without checking
@@ -354,11 +322,10 @@ This example demonstrates how we recovered from an incorrect implementation appr
 
 ### Initial Mistake (What Not To Do)
 ```ruby
-# BAD: Started with implementation without specs
+# BAD: Started with implementation without tests
 class TranscriptParser
   def parse(content)
     # Started writing parser logic without clear requirements
-    # No test coverage for different formats
     # No validation of expected output structure
     # Led to confusion about expected behavior
   end
@@ -367,44 +334,21 @@ end
 
 ### TDD Recovery Process
 
-1. **Step 1: Stop and Write Specs First**
+1. **Step 1: Stop and Write Tests First**
 ```ruby
-# GOOD: Created comprehensive specs first
-RSpec.describe TranscriptParser do
-  let(:fixtures_path) { Rails.root.join('spec/fixtures/files') }
-  
-  shared_examples 'a transcript parser' do |format|
-    let(:content) { File.read(fixtures_path.join("sample.#{format}")) }
-    
-    it 'returns a structured transcript' do
-      result = parser.parse(content)
-      expect(result).to be_a(Transcript)
-      expect(result.segments).to all(be_a(Segment))
-    end
-    
-    it 'identifies speakers correctly' do
-      result = parser.parse(content)
-      expect(result.speakers).to include('Speaker 1', 'Speaker 2')
-    end
-    
-    it 'preserves timestamp information' do
-      result = parser.parse(content)
-      expect(result.segments.first.start_time).to be_present
-      expect(result.segments.first.end_time).to be_present
-    end
+# GOOD: Created comprehensive tests first
+class TranscriptParserParserTest < Minitest::Test
+  def test_retorna_transcript
+    # verifica retorno
   end
-  
-  context 'with VTT format' do
-    it_behaves_like 'a transcript parser', :vtt
-  end
-  
-  context 'with SRT format' do
-    it_behaves_like 'a transcript parser', :srt
+
+  def test_segmentos_estruturados
+    # verifica segmentos
   end
 end
 ```
 
-2. **Step 2: Implement Against Specs**
+2. **Step 2: Implement Against Tests**
 ```ruby
 class TranscriptParser
   def parse(content)
@@ -420,15 +364,15 @@ class TranscriptParser
   private
   
   def detect_format(content)
-    # Implementation guided by format-specific specs
+    # Implementation guided by format-specific tests
   end
   
   def parse_segments(content, format)
-    # Implementation driven by segment structure specs
+    # Implementation driven by segment structure tests
   end
   
   def extract_speakers(segments)
-    # Implementation guided by speaker identification specs
+    # Implementation guided by speaker identification tests
   end
 end
 ```
@@ -442,7 +386,7 @@ end
    - Difficulty testing different formats
 
 2. **Solution**: Returning to TDD principles:
-   - Wrote comprehensive specs first
+   - Wrote comprehensive tests first
    - Defined clear expectations
    - Covered multiple formats
    - Validated output structure

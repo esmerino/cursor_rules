@@ -1,7 +1,9 @@
 ---
 description: Rails Console Interaction Rules
 globs: 
+alwaysApply: false
 ---
+# Rails Console Interaction Rules
 # Rails Console Interaction Rules
 
 ## 1. Console Testing Approach
@@ -15,11 +17,11 @@ When testing functionality in Rails, follow these approaches in order of prefere
 
 2. **Use Test Files for Complex Operations**
    ```ruby
-   # spec/lib/podcast_index_spec.rb
-   require 'rails_helper'
+   # test/lib/podcast_index_test.rb
+   require 'test_helper'
    
-   RSpec.describe PodcastIndex do
-     # Test code here
+   class PodcastIndexTest < Minitest::Test
+     # Código de teste aqui
    end
    ```
 

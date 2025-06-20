@@ -1,7 +1,9 @@
 ---
 description: Rule for extracting and managing rules from .cursorrules
 globs: ["**/.cursorrules"]
+alwaysApply: false
 ---
+# Rule Extraction and Management
 # Rule Extraction and Management
 # This rule helps identify and manage rules from .cursorrules
 
@@ -61,7 +63,7 @@ actions:
          - Profile slow operations
 
       8. Testing Requirements:
-         - Comprehensive RSpec coverage
+         - Comprehensive Minitest coverage
          - Unit tests for models/services
          - Integration tests
          - System tests for flows

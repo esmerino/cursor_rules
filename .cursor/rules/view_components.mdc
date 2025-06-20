@@ -1,6 +1,8 @@
 ---
 description: This rule file establishes standards for ViewComponent usage in the Social Script project. It complements the main `.cursorrules` file with specific ViewComponent practices
 globs: 
+alwaysApply: false
+---
 ---
 ---
 name: view_components
@@ -120,7 +122,6 @@ When moving components:
 
 - Full documentation in `docs/reference-docs/view_components.md`
 - ViewComponent configuration in `config/application.rb`
-- Component previews in `spec/components/previews`
 
 ## Enforcement
 

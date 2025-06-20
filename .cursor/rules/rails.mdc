@@ -1,6 +1,7 @@
 ---
 description: Rails 8 specific rules and guidelines for the Social Script project. These rules complement the main .cursorrules file with detailed Rails-specific practices.
 globs: ["*.rb", "*.erb", "*.rake", "Gemfile", "Rakefile", "config/**/*.yml", "config/**/*.rb", "db/migrate/*.rb", "app/**/*"]
+alwaysApply: false
 ---
 
 # Your rule content
@@ -78,7 +79,7 @@ e.g use `rails generate model` instead of creating a model from scratch
    - Use proper indexing strategies
 
 3. **Testing**
-   - Write comprehensive RSpec tests
+   - Write comprehensive Minitest tests
    - Use factories instead of fixtures
    - Test happy and edge cases
    - Keep tests DRY but readable
@@ -149,7 +150,7 @@ e.g use `rails generate model` instead of creating a model from scratch
 - **Frontend**: Hotwire (Turbo + Stimulus)
 - **Styling**: Tailwind CSS
 - **Database**: PostgreSQL (via Docker)
-- **Testing**: RSpec, Capybara
+- **Testing**: Minitest, Capybara
 - **Background Jobs**: Solid Queue (default in Rails 8)
 - **Caching**: Solid Cache (default in Rails 8)
 - **Real-time**: Solid Cable

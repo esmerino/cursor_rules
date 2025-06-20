@@ -1,7 +1,9 @@
 ---
 description: Standardized approach for problem analysis, solution design, and implementation planning
 globs: ["**/docs/working-memory/**/*.md"]
+alwaysApply: false
 ---
+# Problem-Solving Approach
 # Problem-Solving Approach
 # Structured methodology for addressing issues and implementing features
 
@@ -108,20 +110,16 @@ actions:
 
          e) Specialized Testing:
             - For API issues: Follow api_debugging_methodology test patterns
-              ```ruby
-              # Example API test structure from api_debugging_methodology
-              RSpec.describe ApiClient do
-                describe 'configuration' do
-                  it 'loads environment variables' do
-                    # Test env vars
-                  end
+              # Exemplo de teste de API com Minitest
+              class ApiClientTest < Minitest::Test
+                def test_configuracao
+                  # Testa variáveis de ambiente
+                end
 
-                  it 'configures the client properly' do
-                    # Test client setup
-                  end
+                def test_configuracao_cliente
+                  # Testa setup do cliente
                 end
               end
-              ```
 
       4. Documentation Template:
          ```markdown
