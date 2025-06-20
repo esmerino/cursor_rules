@@ -5,6 +5,24 @@ alwaysApply: false
 ---
 # API Debugging Guidelines
 
+## Overview
+
+Standards and practices for debugging API issues in Rails applications.
+
+<rule>
+name: api_debugging
+description: Rules for debugging API issues in Rails applications
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["test/**/*_test.rb", "app/services/**/*.rb", "lib/**/*.rb"]
+tags:
+  - api
+  - debugging
+  - testing
+  - rails
+</rule>
+
 ## 1. Initial Setup
 
 ### 1.1 Required Gems

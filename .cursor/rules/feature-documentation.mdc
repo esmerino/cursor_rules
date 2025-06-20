@@ -1,0 +1,526 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Feature Documentation
+
+## Overview
+
+Standards and templates for creating comprehensive feature documentation in Next.js applications.
+
+<rule>
+name: feature_documentation
+description: Standards and templates for feature documentation
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["docs/features/**/*", "app/**/*", "components/**/*"]
+tags:
+  - documentation
+  - features
+  - architecture
+  - components
+  - api
+</rule>
+
+## 1. Structure
+
+### 1.1 Location
+
+- `/docs/features/{feature-name}/`
+- Example: `/docs/features/auth/`
+
+### 1.2 Required Files
+
+```
+/docs/features/{feature-name}/
+├── README.md           # Feature overview
+├── architecture.md     # Technical design
+├── components.md       # Component documentation
+├── api.md             # API endpoints
+└── testing.md         # Test scenarios
+```
+
+## 2. Feature Overview (README.md)
+
+```markdown
+# {Feature Name}
+
+## Overview
+
+- Purpose and goals
+- User stories
+- Key functionalities
+- Dependencies
+
+## Status
+
+- Current state
+- Planned improvements
+- Known limitations
+
+## Quick Links
+
+- [Architecture](mdc:architecture.md)
+- [Components](mdc:components.md)
+- [API Documentation](mdc:api.md)
+- [Testing](mdc:testing.md)
+```
+
+## 3. Architecture Documentation
+
+```markdown
+# {Feature Name} Architecture
+
+## System Design
+
+- High-level overview
+- Component relationships
+- Data flow diagrams
+
+## Technical Decisions
+
+- Technology choices
+- Design patterns
+- Performance considerations
+
+## Dependencies
+
+- External services
+- Internal dependencies
+- Configuration requirements
+```
+
+## 4. Component Documentation
+
+```markdown
+# {Feature Name} Components
+
+## Component Tree
+
+- Parent/child relationships
+- Component hierarchy
+- State management
+
+## Individual Components
+
+### {ComponentName}
+
+- Purpose
+- Props interface
+- Usage examples
+- State management
+- Event handlers
+```
+
+## 5. Implementation Guidelines
+
+### 5.1 Documentation Creation
+
+- Create feature directory on feature branch
+- Start with README.md
+- Add other docs as feature develops
+- Keep diagrams in `/assets`
+
+### 5.2 Maintenance
+
+- Update on significant changes
+- Review monthly
+- Archive deprecated features
+- Track feature dependencies
+
+### 5.3 Cross-Referencing
+
+- Link to related features
+- Reference components
+- Document API dependencies
+- Track feature flags
+
+## 6. Feature Lifecycle
+
+### 6.1 Planning
+
+- Create feature directory
+- Draft README.md
+- Define architecture
+- Plan component structure
+
+### 6.2 Development
+
+- Update docs with implementation
+- Document API changes
+- Add component details
+- Include code examples
+
+### 6.3 Testing
+
+- Document test scenarios
+- Add edge cases
+- Include performance tests
+- Document test data
+
+### 6.4 Maintenance
+
+- Track feature versions
+- Document improvements
+- Note deprecations
+- Update dependencies
+
+## 7. Documentation Enforcement
+
+### 7.1 Task Requirements
+
+- Every feature task plan MUST include documentation updates
+- Documentation changes MUST be reviewed before task completion
+- Feature cannot be marked as complete without documentation
+- All component changes require component.md updates
+
+### 7.2 Review Checklist
+
+```markdown
+## Documentation Review
+
+- [ ] README.md is complete and current
+- [ ] Architecture decisions documented
+- [ ] Component documentation updated
+- [ ] API endpoints documented
+- [ ] Test scenarios added
+- [ ] Cross-references verified
+- [ ] Examples are up to date
+```
+
+### 7.3 Working Memory Integration
+
+- Link feature docs in task plans
+- Track documentation debt
+- Include doc updates in progress history
+- Reference affected documentation
+
+### 7.4 Validation Rules
+
+- No empty documentation sections
+- All components must be documented
+- API endpoints must include examples
+- Test scenarios must be current
+- Dependencies must be listed
+
+### 7.5 Monthly Documentation Health
+
+- Review all feature documentation
+- Update outdated sections
+- Remove deprecated features
+- Verify cross-references
+- Update examples
+
+## 8. Working Memory Feature Integration
+
+### 8.1 Task Plan Requirements
+
+```markdown
+## Feature Documentation Impact
+
+### Affected Features
+
+- Feature: {feature-name}
+  - Files to update:
+    - [ ] README.md
+    - [ ] architecture.md
+    - [ ] components.md
+    - [ ] api.md
+    - [ ] testing.md
+  - Changes needed:
+    - Description of changes
+    - Impact assessment
+    - Cross-reference updates
+
+### Documentation Review
+
+- [ ] Feature documentation is current
+- [ ] All affected components documented
+- [ ] API changes reflected
+- [ ] Test cases updated
+- [ ] Cross-references maintained
+```
+
+### 8.2 Progress Tracking
+
+```markdown
+### YYYY-MM-DD HH:mm - Documentation Update
+
+- ✓ Updated: List of updated docs
+- 🤔 Decisions: Documentation decisions
+- ❌ Issues: Documentation challenges
+- ⏭️ Next: Pending documentation tasks
+```
+
+### 8.3 Completion Requirements
+
+- Documentation updates must be completed before task completion
+- Feature changes require documentation review
+- Component changes must update relevant feature docs
+- API changes must update API documentation
+- Test changes must update test documentation
+
+## 9. Documentation Standards
+
+### 9.1 API Documentation Format
+
+#### 9.1.1 Overview Section
+
+- Start with a clear, high-level description
+- Explain the purpose and context
+- Outline key features and capabilities
+
+#### 9.1.2 Component Documentation
+
+- Lead with descriptive text explaining purpose
+- Include use cases and examples
+- Follow with relevant code samples
+- Add implementation details last
+
+#### 9.1.3 Code Sample Guidelines
+
+- Always precede code with explanatory text
+- Include parameter descriptions
+- Explain return values
+- Add usage examples where helpful
+- Keep code samples focused and minimal
+
+#### 9.1.4 Section Structure
+
+- Overview
+- Key Features
+- Implementation Details
+- Examples
+- Security Considerations
+- Error Handling
+- Testing Guidelines
+
+#### 9.1.5 Writing Style
+
+- Use clear, descriptive language
+- Explain concepts before showing code
+- Include real-world use cases
+- Add context for technical details
+- Use proper formatting and headers
+
+### 9.2 Example Format
+
+```markdown
+### Feature Name
+
+A clear description of what this feature does and why it's useful.
+
+**Key Features:**
+
+- Feature 1 description
+- Feature 2 description
+- Feature 3 description
+
+**Implementation Details:**
+Explanation of how it works and important considerations.
+
+`code sample`
+
+**Usage Examples:**
+Real-world examples of how to use this feature.
+```
+
+## 10. Documentation Update Rules
+
+### 10.1 Surgical Updates Only
+
+- Make minimal necessary changes
+- Preserve existing structure
+- Keep existing content unless explicitly outdated
+- Add new sections instead of rewriting
+- Reference other docs instead of duplicating
+
+### 10.2 When to Update
+
+- New feature additions
+- Bug fixes affecting behavior
+- API changes
+- Critical fixes
+- Security updates
+- Type system changes
+
+### 10.3 Update Requirements
+
+- Must include timestamp
+- Must reference task/issue number
+- Must preserve existing content
+- Must not duplicate information
+- Must follow existing format
+
+### 10.4 Documentation Review
+
+- Review changes before commit
+- Verify only necessary changes
+- Check for content preservation
+- Validate cross-references
+- Ensure timestamp accuracy
+
+### 10.5 Change Scope
+
+- Complete rewrites require approval
+- Structure changes require discussion
+- Format changes need consensus
+- Content removal needs justification
+- New sections need rationale
+
+### 10.6 Example Update
+
+```markdown
+### YYYY-MM-DD HH:mm - Brief Title
+
+Update Type: [Feature|Fix|Security|Type|API]
+Task: [task-id]
+
+Changes:
+
+- Added X
+- Updated Y
+- Fixed Z
+
+Note: See [related-doc] for details.
+```
+
+## 11. Component Documentation Standards
+
+### 11.1 Component Structure
+
+```markdown
+### ComponentName
+
+**Purpose:** Brief description of what this component does.
+
+**Props:**
+```typescript
+interface ComponentNameProps {
+  /** Description of prop */
+  propName: string;
+  /** Optional prop description */
+  optionalProp?: number;
+}
+```
+
+**Usage:**
+```tsx
+<ComponentName propName="value" optionalProp={42} />
+```
+
+**State Management:**
+Description of how the component manages state.
+
+**Event Handlers:**
+Description of events the component handles.
+```
+
+### 11.2 API Documentation Standards
+
+```markdown
+### Endpoint Name
+
+**Method:** `GET|POST|PUT|DELETE`
+
+**URL:** `/api/endpoint`
+
+**Description:** What this endpoint does.
+
+**Parameters:**
+```typescript
+interface RequestParams {
+  /** Parameter description */
+  paramName: string;
+}
+```
+
+**Response:**
+```typescript
+interface Response {
+  /** Response field description */
+  field: string;
+}
+```
+
+**Example:**
+```bash
+curl -X GET /api/endpoint?paramName=value
+```
+
+**Error Codes:**
+- `400`: Bad Request
+- `401`: Unauthorized
+- `500`: Internal Server Error
+```
+
+## 12. Testing Documentation
+
+### 12.1 Test Scenarios
+
+```markdown
+## Test Scenarios
+
+### Happy Path
+- Description of normal operation
+- Expected behavior
+- Test data requirements
+
+### Edge Cases
+- Boundary conditions
+- Error scenarios
+- Performance tests
+
+### Integration Tests
+- Component interactions
+- API integration
+- End-to-end flows
+```
+
+### 12.2 Test Data
+
+```markdown
+## Test Data
+
+### Sample Data
+```json
+{
+  "example": "data"
+}
+```
+
+### Mock Responses
+```json
+{
+  "mock": "response"
+}
+```
+```
+
+## 13. Maintenance and Review
+
+### 13.1 Regular Reviews
+
+- Monthly feature documentation review
+- Quarterly architecture review
+- Annual comprehensive review
+- Update outdated examples
+- Remove deprecated features
+
+### 13.2 Quality Metrics
+
+- Documentation coverage
+- Example accuracy
+- Link health
+- Update frequency
+- User feedback
+
+### 13.3 Continuous Improvement
+
+- Gather feedback from developers
+- Update templates based on usage
+- Improve examples and clarity
+- Add missing documentation
+- Optimize structure and navigation

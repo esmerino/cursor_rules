@@ -1,0 +1,487 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Authentication Standards
+
+## Overview
+
+Authentication standards and best practices for Next.js applications using Supabase.
+
+<rule>
+name: authentication_standards
+description: Authentication standards and best practices for Next.js applications
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["app/**/*", "components/**/*", "lib/**/*", "middleware.ts"]
+tags:
+  - authentication
+  - supabase
+  - security
+  - nextjs
+</rule>
+
+## 1. Supabase Integration
+
+### 1.1 Required Package
+
+Use `@supabase/ssr` exclusively for Next.js integration:
+
+- No direct usage of `@supabase/supabase-js`
+- Use `createServerClient` for server components
+- Use `createBrowserClient` for client components
+- Handle cookies through Server Actions
+
+### 1.2 Client Setup
+
+```typescript
+// lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // Handle cookie setting error
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            // Handle cookie removal error
+          }
+        },
+      },
+    }
+  )
+}
+```
+
+```typescript
+// lib/supabase/client.ts
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+## 2. Session Management
+
+### 2.1 Server Actions
+
+Use Server Actions for auth operations:
+
+```typescript
+// app/actions/auth.ts
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+
+export async function signIn(formData: FormData) {
+  const supabase = createClient()
+  
+  const data = {
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  }
+
+  const { error } = await supabase.auth.signInWithPassword(data)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  redirect('/dashboard')
+}
+
+export async function signOut() {
+  const supabase = createClient()
+  await supabase.auth.signOut()
+  redirect('/')
+}
+```
+
+### 2.2 Cookie Handling
+
+Implement proper cookie handling:
+
+```typescript
+// middleware.ts
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          supabaseResponse.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          supabaseResponse.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Handle protected routes
+  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  return supabaseResponse
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}
+```
+
+### 2.3 Session Refresh
+
+Add session refresh mechanism:
+
+```typescript
+// lib/auth/session.ts
+import { createClient } from '@/lib/supabase/server'
+
+export async function refreshSession() {
+  const supabase = createClient()
+  
+  const { data: { session }, error } = await supabase.auth.getSession()
+  
+  if (error) {
+    throw new Error('Failed to refresh session')
+  }
+  
+  return session
+}
+```
+
+## 3. Protected Routes
+
+### 3.1 AuthGuard Component
+
+Use AuthGuard component for protected routes:
+
+```typescript
+// components/auth/auth-guard.tsx
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { User } from '@supabase/supabase-js'
+
+interface AuthGuardProps {
+  children: React.ReactNode
+  requiredRole?: string
+}
+
+export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+
+    getUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return <div>Access denied. Please sign in.</div>
+  }
+
+  if (requiredRole && user.user_metadata?.role !== requiredRole) {
+    return <div>Access denied. Insufficient permissions.</div>
+  }
+
+  return <>{children}</>
+}
+```
+
+### 3.2 Role-Based Access
+
+Implement role-based access:
+
+```typescript
+// lib/auth/permissions.ts
+export const ROLES = {
+  ADMIN: 'admin',
+  USER: 'user',
+  MODERATOR: 'moderator',
+} as const
+
+export function hasPermission(userRole: string, requiredRole: string): boolean {
+  const roleHierarchy = {
+    [ROLES.ADMIN]: 3,
+    [ROLES.MODERATOR]: 2,
+    [ROLES.USER]: 1,
+  }
+
+  return roleHierarchy[userRole as keyof typeof roleHierarchy] >= 
+         roleHierarchy[requiredRole as keyof typeof roleHierarchy]
+}
+```
+
+## 4. Error Handling
+
+### 4.1 AuthErrorBoundary
+
+Use AuthErrorBoundary for authentication errors:
+
+```typescript
+// components/auth/auth-error-boundary.tsx
+'use client'
+
+import { Component, ReactNode } from 'react'
+
+interface Props {
+  children: ReactNode
+  fallback?: ReactNode
+}
+
+interface State {
+  hasError: boolean
+  error?: Error
+}
+
+export class AuthErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('Auth error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div>
+          <h2>Authentication Error</h2>
+          <p>Something went wrong with authentication.</p>
+          <button onClick={() => this.setState({ hasError: false })}>
+            Try again
+          </button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+```
+
+### 4.2 Retry Mechanisms
+
+Implement retry mechanisms:
+
+```typescript
+// lib/auth/retry.ts
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  let lastError: Error
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error as Error
+      
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+      }
+    }
+  }
+
+  throw lastError!
+}
+```
+
+## 5. Security Best Practices
+
+### 5.1 Environment Variables
+
+```bash
+# .env.local
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+### 5.2 Token Management
+
+- Never store sensitive tokens in localStorage
+- Use httpOnly cookies for session tokens
+- Implement proper token cleanup
+- Set appropriate token expiration times
+
+### 5.3 Input Validation
+
+```typescript
+// lib/auth/validation.ts
+import { z } from 'zod'
+
+export const signInSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
+
+export const signUpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+})
+```
+
+## 6. Testing Authentication
+
+### 6.1 Test Setup
+
+```typescript
+// __tests__/auth.test.ts
+import { render, screen, fireEvent } from '@testing-library/react'
+import { AuthGuard } from '@/components/auth/auth-guard'
+
+// Mock Supabase client
+jest.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    auth: {
+      getUser: jest.fn(),
+      onAuthStateChange: jest.fn(),
+    },
+  }),
+}))
+
+describe('AuthGuard', () => {
+  it('should render children when user is authenticated', () => {
+    // Test implementation
+  })
+
+  it('should show loading state initially', () => {
+    // Test implementation
+  })
+
+  it('should redirect when user is not authenticated', () => {
+    // Test implementation
+  })
+})
+```
+
+## 7. Monitoring and Logging
+
+### 7.1 Auth Events
+
+```typescript
+// lib/auth/monitoring.ts
+import { logger } from '@/lib/logger'
+
+export function logAuthEvent(event: string, data?: any) {
+  logger.info(`Auth event: ${event}`, data)
+}
+
+export function logAuthError(error: Error, context?: any) {
+  logger.error('Authentication error', error, context)
+}
+```
+
+### 7.2 Security Monitoring
+
+- Monitor failed login attempts
+- Track suspicious activity
+- Log authentication events
+- Monitor session duration
+- Track role changes

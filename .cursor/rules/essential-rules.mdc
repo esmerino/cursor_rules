@@ -1,0 +1,175 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Essential Rules
+
+## Overview
+
+Core development rules and standards that must be followed in all development tasks.
+
+<rule>
+name: essential_rules
+description: Core development rules and standards for all tasks
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["**/*"]
+tags:
+  - core
+  - standards
+  - development
+</rule>
+
+## 1. Personalization
+
+- Always greet the user with their name
+- Maintain a professional yet friendly tone
+
+## 2. Documentation Review
+
+- Review `.cursorrules` files and `/docs` before every task
+- Every message should reference the cursorrules
+- All components should be in `app/components` or `app/components/ui`
+
+## 3. Working Memory and State
+
+### Directory Structure
+
+```
+/docs/
+├── working-memory/           # Active context
+│   ├── open/                # Active tasks
+│   │   └── {task-id}/      # Task-specific directory
+│   │       └── .plan       # Task plan
+│   └── done/               # Completed tasks
+├── templates/              # Project templates
+│   └── feature/           # Feature documentation templates
+│       ├── README.md
+│       ├── api.md
+│       ├── architecture.md
+│       ├── components.md
+│       └── testing.md
+└── cursor_settings.md     # Cursor IDE settings
+```
+
+### State Management
+
+- Review `docs/composer-history` for current and previous tasks
+- Every run should use composer history and `.plan`
+- Always reference the `.cursorrules` file
+- Always check these files for current project state before any work:
+  - `/docs/plan.md` - Main project plan and task tracking
+  - Output plan updates before starting work
+  - Reference plan number in all communications
+
+## 4. File Management
+
+- Be very cautious when deleting files
+- Only delete relevant files
+- Ask for permission if unsure about deletions
+- Before commits with large deletions, review and confirm necessity
+
+## 5. Code Changes
+
+- Make surgical fixes to existing functionality
+- Only change what's necessary to resolve immediate issues
+- Always update the `.plan` file
+- Always use terminal command to get current date/time
+
+## 6. Project Context
+
+### Tech Stack Example
+
+- Frontend: Next.js 14, TypeScript, Tailwind CSS, shadcn/UI
+- State Management: Zustand
+- Icons: Lucide Icons
+- Testing: Jest
+
+## 7. Self-Improvement Rules
+
+### Documentation Maintenance
+
+- Update .cursorrules when new patterns emerge
+- Document solutions for recurring issues
+- Keep code examples current
+- Update plan files regularly
+
+### Knowledge Capture
+
+- Document common errors and solutions
+- Record successful patterns
+- Update component examples
+- Track performance improvements
+- Document API learnings
+
+### Issue Prevention
+
+- Document type-checking patterns
+- Record validation strategies
+- Note state management solutions
+- Track optimization techniques
+- Document error handling approaches
+
+## 8. Directory Structure
+
+### Project Documentation Structure
+
+```
+/docs/
+├── working-memory/           # Active context
+│   ├── open/                # Active tasks
+│   │   └── {task-id}/      # Task-specific directory
+│   │       └── .plan       # Task plan
+│   └── done/               # Completed tasks
+├── templates/              # Project templates
+│   └── feature/           # Feature documentation templates
+│       ├── README.md
+│       ├── api.md
+│       ├── architecture.md
+│       ├── components.md
+│       └── testing.md
+└── cursor_settings.md     # Cursor IDE settings
+```
+
+### Application Directory Structure
+
+```
+# Replace this section with your application's directory structure
+# Example for Next.js 14:
+/app/
+├── actions/               # Server actions
+├── api/                  # API routes
+├── components/           # UI components
+│   ├── blocks/          # Content blocks
+│   └── ui/              # shadcn/UI components
+├── config/              # Configuration
+├── constants/           # Constants
+├── hooks/               # React hooks
+├── services/            # Business logic
+├── stores/              # State management
+├── types/               # TypeScript types
+└── utils/               # Utilities
+```
+
+## 9. Best Practices
+
+1. Use TypeScript for type safety
+2. Use Tailwind CSS exclusively
+3. Use functional components with hooks
+4. Add clear comments
+5. Follow Next.js 14 structure
+6. Use environment variables
+7. Optimize performance
+8. Ensure accessibility
+9. Use shadcn/UI from /app/components/ui
+10. Let TypeScript infer types when possible
+
+## 10. Remember
+
+- Always use --execute with tinker
+- Never dump or overwrite local DB without asking
+- Check plan files before starting work
+- Document improvements as you discover them
+- Commit work after significant progress

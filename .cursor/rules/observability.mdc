@@ -1,0 +1,441 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Observability
+
+## Overview
+
+Standards and practices for implementing observability in Next.js applications, including monitoring, logging, and debugging.
+
+<rule>
+name: observability
+description: Standards for implementing observability in Next.js applications
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["app/**/*", "lib/**/*", "components/**/*", "middleware.ts"]
+tags:
+  - observability
+  - monitoring
+  - logging
+  - debugging
+  - performance
+</rule>
+
+## 1. System Monitoring
+
+### 1.1 Performance Monitoring
+
+- Track page load times
+- Monitor API response times
+- Watch memory usage
+- Track component render times
+- Monitor database queries
+
+### 1.2 Error Tracking
+
+- Capture client-side errors
+- Monitor API failures
+- Track authentication issues
+- Log database errors
+- Monitor build failures
+
+### 1.3 User Analytics
+
+- Track feature usage
+- Monitor user flows
+- Capture performance metrics
+- Track error rates
+- Monitor conversion paths
+
+## 2. Logging Standards
+
+### 2.1 Log Levels
+
+- debug: Development details and verbose information
+- info: General operational events
+- warn: Warning conditions that should be reviewed
+- error: Error conditions that need immediate attention
+
+### 2.2 Logging Methods
+
+```typescript
+logger.debug(message: string, data?: any)
+logger.info(message: string, data?: any)
+logger.warn(message: string, data?: any)
+logger.error(message: string, error?: any, data?: any)
+```
+
+### 2.3 Error Handling
+
+```typescript
+try {
+  // Operation that may fail
+} catch (error) {
+  logger.error("Operation failed", error, { context: "additional data" });
+}
+```
+
+### 2.4 Common Log Patterns
+
+```typescript
+// Feature initialization
+logger.info("Feature initialized", { featureId, config });
+
+// API calls
+logger.debug("API request", { endpoint, params });
+logger.info("API response received", { status, data });
+
+// Error handling
+logger.error("API request failed", error, { endpoint, params });
+
+// User actions
+logger.info("User action", { action, userId, details });
+
+// Performance metrics
+logger.debug("Performance metric", { operation, duration });
+
+// UI changes
+logger.info("UI update", { component, change, reason });
+```
+
+## 3. Debugging Guidelines
+
+### 3.1 Development Tools
+
+- Use React DevTools
+- Enable source maps
+- Use browser debugger
+- Enable verbose logging
+- Use performance profiler
+
+### 3.2 Common Issues
+
+- Component rendering
+- State management
+- API integration
+- Authentication flows
+- Performance bottlenecks
+
+### 3.3 Debug Process
+
+- Reproduce the issue
+- Check error logs
+- Review recent changes
+- Test in isolation
+- Document findings
+
+## 4. Alerting
+
+### 4.1 Critical Alerts
+
+- Authentication failures
+- API downtime
+- Database errors
+- Memory leaks
+- Build failures
+
+### 4.2 Warning Alerts
+
+- High latency
+- Error rate spikes
+- Low disk space
+- Cache misses
+- Slow queries
+
+### 4.3 Alert Management
+
+- Define severity levels
+- Set thresholds
+- Establish on-call rotation
+- Document response procedures
+- Track resolution times
+
+## 5. Performance Monitoring
+
+### 5.1 Core Web Vitals
+
+```typescript
+// lib/analytics/web-vitals.ts
+import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals'
+
+function sendToAnalytics(metric: any) {
+  logger.info('Web Vital', {
+    name: metric.name,
+    value: metric.value,
+    id: metric.id,
+  })
+}
+
+export function reportWebVitals() {
+  getCLS(sendToAnalytics)
+  getFID(sendToAnalytics)
+  getFCP(sendToAnalytics)
+  getLCP(sendToAnalytics)
+  getTTFB(sendToAnalytics)
+}
+```
+
+### 5.2 Custom Metrics
+
+```typescript
+// lib/analytics/custom-metrics.ts
+export function trackPageLoad(page: string, loadTime: number) {
+  logger.info('Page Load', { page, loadTime })
+}
+
+export function trackComponentRender(component: string, renderTime: number) {
+  logger.debug('Component Render', { component, renderTime })
+}
+
+export function trackApiCall(endpoint: string, duration: number, status: number) {
+  logger.info('API Call', { endpoint, duration, status })
+}
+```
+
+## 6. Error Tracking
+
+### 6.1 Error Boundaries
+
+```typescript
+// components/error-boundary.tsx
+'use client'
+
+import { Component, ReactNode } from 'react'
+import { logger } from '@/lib/logger'
+
+interface Props {
+  children: ReactNode
+  fallback?: ReactNode
+}
+
+interface State {
+  hasError: boolean
+  error?: Error
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    logger.error('Error boundary caught error', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div>
+          <h2>Something went wrong</h2>
+          <p>Please try refreshing the page.</p>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+```
+
+### 6.2 Global Error Handler
+
+```typescript
+// lib/error-handler.ts
+import { logger } from '@/lib/logger'
+
+export function setupGlobalErrorHandling() {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('error', (event) => {
+      logger.error('Global error', event.error, {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+      })
+    })
+
+    window.addEventListener('unhandledrejection', (event) => {
+      logger.error('Unhandled promise rejection', event.reason, {
+        promise: event.promise,
+      })
+    })
+  }
+}
+```
+
+## 7. API Monitoring
+
+### 7.1 Request/Response Logging
+
+```typescript
+// lib/api/monitoring.ts
+import { logger } from '@/lib/logger'
+
+export function logApiRequest(endpoint: string, method: string, params?: any) {
+  logger.debug('API Request', { endpoint, method, params })
+}
+
+export function logApiResponse(endpoint: string, status: number, data?: any, duration?: number) {
+  logger.info('API Response', { endpoint, status, data, duration })
+}
+
+export function logApiError(endpoint: string, error: Error, params?: any) {
+  logger.error('API Error', error, { endpoint, params })
+}
+```
+
+### 7.2 Performance Tracking
+
+```typescript
+// lib/api/performance.ts
+export async function withPerformanceTracking<T>(
+  operation: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  const start = performance.now()
+  
+  try {
+    const result = await fn()
+    const duration = performance.now() - start
+    
+    logger.debug('Operation completed', { operation, duration })
+    return result
+  } catch (error) {
+    const duration = performance.now() - start
+    logger.error('Operation failed', error as Error, { operation, duration })
+    throw error
+  }
+}
+```
+
+## 8. User Analytics
+
+### 8.1 Event Tracking
+
+```typescript
+// lib/analytics/events.ts
+import { logger } from '@/lib/logger'
+
+export function trackEvent(event: string, properties?: Record<string, any>) {
+  logger.info('User Event', { event, properties })
+}
+
+export function trackPageView(page: string, properties?: Record<string, any>) {
+  logger.info('Page View', { page, properties })
+}
+
+export function trackUserAction(action: string, userId?: string, details?: any) {
+  logger.info('User Action', { action, userId, details })
+}
+```
+
+### 8.2 Feature Usage
+
+```typescript
+// lib/analytics/features.ts
+export function trackFeatureUsage(feature: string, userId?: string, context?: any) {
+  logger.info('Feature Usage', { feature, userId, context })
+}
+
+export function trackFeatureError(feature: string, error: Error, context?: any) {
+  logger.error('Feature Error', error, { feature, context })
+}
+```
+
+## 9. Monitoring Dashboard
+
+### 9.1 Key Metrics
+
+- Page load times
+- API response times
+- Error rates
+- User engagement
+- Feature usage
+
+### 9.2 Alerting Rules
+
+```typescript
+// lib/monitoring/alerts.ts
+export const ALERT_THRESHOLDS = {
+  pageLoadTime: 3000, // 3 seconds
+  apiResponseTime: 2000, // 2 seconds
+  errorRate: 0.05, // 5%
+  memoryUsage: 0.8, // 80%
+}
+
+export function checkAlertThresholds(metrics: any) {
+  if (metrics.pageLoadTime > ALERT_THRESHOLDS.pageLoadTime) {
+    logger.warn('Page load time exceeded threshold', { 
+      actual: metrics.pageLoadTime, 
+      threshold: ALERT_THRESHOLDS.pageLoadTime 
+    })
+  }
+  
+  // Add more threshold checks
+}
+```
+
+## 10. Development vs Production
+
+### 10.1 Development Environment
+
+- Verbose logging
+- Detailed error messages
+- Performance profiling
+- Debug tools enabled
+- Local monitoring
+
+### 10.2 Production Environment
+
+- Minimal logging
+- Sanitized error messages
+- Performance monitoring
+- Debug tools disabled
+- Remote monitoring
+
+### 10.3 Environment Configuration
+
+```typescript
+// lib/config/environment.ts
+export const isDevelopment = process.env.NODE_ENV === 'development'
+export const isProduction = process.env.NODE_ENV === 'production'
+
+export const loggingConfig = {
+  level: isDevelopment ? 'debug' : 'info',
+  enableConsole: isDevelopment,
+  enableRemote: isProduction,
+}
+```
+
+## 11. Best Practices
+
+### 11.1 Logging Best Practices
+
+- Use structured logging
+- Include context with errors
+- Avoid logging sensitive data
+- Use appropriate log levels
+- Implement log rotation
+
+### 11.2 Monitoring Best Practices
+
+- Set up automated alerts
+- Monitor business metrics
+- Track user experience
+- Monitor system health
+- Regular performance reviews
+
+### 11.3 Debugging Best Practices
+
+- Reproduce issues consistently
+- Use systematic approach
+- Document debugging steps
+- Share findings with team
+- Update monitoring based on learnings

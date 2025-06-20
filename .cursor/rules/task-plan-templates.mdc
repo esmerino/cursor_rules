@@ -1,0 +1,328 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Task Plan Templates
+
+## Overview
+
+Standards and templates for creating and managing task plans in the working memory system.
+
+<rule>
+name: task_plan_templates
+description: Standards and templates for task plan creation and management
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["docs/working-memory/**/*", "docs/templates/**/*"]
+tags:
+  - planning
+  - documentation
+  - task-management
+  - templates
+</rule>
+
+## 1. Template Location
+
+- All task templates are in `/docs/templates/`
+- Main template: `task-plan-template.md`
+
+## 2. Creating New Tasks
+
+```bash
+# Create new task directory
+mkdir -p docs/working-memory/open/{feature-name}-{YYYYMMDD}
+# Copy template
+cp docs/templates/task-plan-template.md docs/working-memory/open/{feature-name}-{YYYYMMDD}/.plan
+```
+
+## 3. Template Usage Rules
+
+- Always copy from template for new tasks
+- Keep all sections, mark as N/A if not applicable
+- Progress History and Current Status at bottom
+- Use checkboxes for implementation steps
+- Include paths in backticks
+- Document all major decisions
+- Update affected components section as work progresses
+
+## 4. Required Sections (In Order)
+
+- Problem Analysis: Clear issue definition
+- Solution Design: Approaches considered
+- Implementation Steps: Detailed breakdown
+- Affected Components: Files/systems impacted
+- Dependencies: Task relationships
+- Current Status: Snapshot of current state (at bottom)
+- Progress History: Chronological record (at bottom)
+
+## 5. Implementation Steps Format
+
+```markdown
+- [ ] High-level step
+  - [ ] Detailed sub-task
+  - Success criteria
+  - Dependencies
+```
+
+## 6. Current Status Format (At Bottom)
+
+```markdown
+## Current Status
+
+### YYYY-MM-DD HH:mm
+
+**Status**: {In Progress/Blocked/Completed}
+
+- What's working: {current state}
+- What's not: {current issues}
+- Blocking issues: {if any}
+- Next actions: {immediate next steps}
+- Documentation updates needed:
+  - [ ] Feature documentation changes
+  - [ ] API documentation updates
+  - [ ] Component documentation revisions
+  - [ ] Test documentation updates
+  - [ ] Architecture documentation changes
+```
+
+Note: Include documentation updates section only when changes affect documentation.
+
+## 7. Progress History Format (At Bottom)
+
+```markdown
+## Progress History
+
+### YYYY-MM-DD HH:mm - {Brief Title}
+
+- ✓ Completed: Specific work completed
+- 🤔 Decisions: Why we chose X over Y
+- ❌ Issues: Problems hit and how we solved them
+- 📚 Documentation: Documentation changes made or needed
+- ⏭️ Led to: What this enabled/unblocked
+```
+
+Note: The Documentation entry (📚) should be included whenever changes affect or require documentation updates.
+
+## 8. Task Completion
+
+- All implementation steps checked
+- Final status update added at bottom
+- Move to completed:
+  ```bash
+  mv docs/working-memory/open/{task-id} docs/working-memory/done/
+  ```
+
+## 9. Best Practices
+
+- Update status at bottom before starting work
+- Document decisions as they're made
+- Keep progress log updated at bottom
+- Link to relevant issues/PRs
+- Include rollback steps for risky changes
+- Reference affected components
+
+## 10. Template Maintenance
+
+- Review template monthly
+- Update based on team feedback
+- Keep example sections current
+- Document common patterns
+- Remove unused sections
+
+## 11. Feature Documentation Integration
+
+### 11.1 Task Plan Requirements
+
+```markdown
+## Feature Documentation Impact
+
+### Affected Features
+
+- Feature: {feature-name}
+  - Files to update:
+    - [ ] README.md
+    - [ ] architecture.md
+    - [ ] components.md
+    - [ ] api.md
+    - [ ] testing.md
+  - Changes needed:
+    - Description of changes
+    - Impact assessment
+    - Cross-reference updates
+
+### Documentation Review
+
+- [ ] Feature documentation is current
+- [ ] All affected components documented
+- [ ] API changes reflected
+- [ ] Test cases updated
+- [ ] Cross-references maintained
+```
+
+### 11.2 Progress Tracking
+
+```markdown
+### YYYY-MM-DD HH:mm - Documentation Update
+
+- ✓ Updated: List of updated docs
+- 🤔 Decisions: Documentation decisions
+- ❌ Issues: Documentation challenges
+- ⏭️ Next: Pending documentation tasks
+```
+
+### 11.3 Completion Requirements
+
+- Documentation updates must be completed before task completion
+- Feature changes require documentation review
+- Component changes must update relevant feature docs
+- API changes must update API documentation
+- Test changes must update test documentation
+
+## 12. Template Structure
+
+### 12.1 Basic Template
+
+```markdown
+# Task: {Task Name}
+
+## Problem Analysis
+
+### Issue Description
+- What: [Clear problem statement]
+- Why: [Business/technical impact]
+- Who: [Affected users/systems]
+- When: [Occurrence pattern]
+- Type: [Issue type - API/UI/Performance/Security]
+
+### Root Cause
+- Identified causes:
+  1. [Primary cause]
+  2. [Secondary factors]
+- Evidence:
+  - [Supporting data]
+  - [Observations]
+
+### System Impact
+- Components:
+  - [List affected systems]
+- Dependencies:
+  - [Upstream/downstream effects]
+
+## Solution Design
+
+### Proposed Solutions
+1. Solution A:
+   - Approach: [Description]
+   - Pros: [Benefits]
+   - Cons: [Drawbacks]
+   - Risks: [Potential issues]
+
+2. Solution B:
+   - Approach: [Description]
+   - Pros: [Benefits]
+   - Cons: [Drawbacks]
+   - Risks: [Potential issues]
+
+### Selected Solution
+- Choice: [Solution name]
+- Rationale: [Decision factors]
+- Trade-offs: [Accepted compromises]
+
+## Implementation Plan
+
+### Steps
+1. [ ] Step 1
+   - Tasks:
+     - [ ] Task 1.1
+     - [ ] Task 1.2
+   - Dependencies:
+     - [List dependencies]
+
+### Risk Mitigation
+- Risks:
+  1. [Risk description]
+     - Mitigation: [Strategy]
+     - Fallback: [Plan B]
+
+### Testing
+- Test cases:
+  1. [Test scenario]
+  2. [Test scenario]
+
+## Affected Components
+
+- Files to modify:
+  - [ ] `path/to/file1.tsx`
+  - [ ] `path/to/file2.ts`
+- New files to create:
+  - [ ] `path/to/new-file.tsx`
+- Files to delete:
+  - [ ] `path/to/old-file.ts`
+
+## Dependencies
+
+- Blocks: [task-id-1], [task-id-2]
+- Blocked by: [task-id-3]
+- Related: [task-id-4]
+
+## Current Status
+
+### YYYY-MM-DD HH:mm
+
+**Status**: Not Started
+
+- What's working: N/A
+- What's not: N/A
+- Blocking issues: N/A
+- Next actions: Begin implementation
+- Documentation updates needed: N/A
+
+## Progress History
+
+### YYYY-MM-DD HH:mm - Task Created
+
+- ✓ Completed: Task plan created
+- 🤔 Decisions: Initial planning decisions
+- ❌ Issues: None
+- 📚 Documentation: Template copied
+- ⏭️ Led to: Ready to begin implementation
+```
+
+## 13. Version Control Integration
+
+### 13.1 Commit Patterns
+
+- Prefix task-related commits with `docs(task)`
+- Include task ID in commit message
+- Reference affected components
+- Example: `docs(task): update auth-feature-20240320 implementation`
+
+### 13.2 Branch Management
+
+- Format: `docs/task/{task-id}`
+- Short-lived, task-specific
+- Merge after task completion
+- Example: `docs/task/auth-update-20240320`
+
+## 14. Quality Assurance
+
+### 14.1 Review Checklist
+
+- [ ] All required sections present
+- [ ] Implementation steps are clear and actionable
+- [ ] Dependencies are properly identified
+- [ ] Affected components are listed
+- [ ] Progress history is maintained
+- [ ] Current status is up to date
+- [ ] Documentation updates are tracked
+
+### 14.2 Validation Rules
+
+- No empty required sections
+- All checkboxes properly formatted
+- Paths are in backticks
+- Timestamps are in correct format
+- Cross-references are valid
+- Progress history is chronological

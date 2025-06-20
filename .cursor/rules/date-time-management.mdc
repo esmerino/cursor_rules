@@ -1,0 +1,319 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Date and Time Management
+
+## Overview
+
+Standards and practices for managing dates and times in development tasks, documentation, and project tracking.
+
+<rule>
+name: date_time_management
+description: Standards for date and time management in development tasks and documentation
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["docs/**/*", "**/*.md", "**/*.plan"]
+tags:
+  - time-management
+  - documentation
+  - project-tracking
+  - timestamps
+</rule>
+
+## 1. Core Requirements
+
+### 1.1 Always Fetch Current Date and Time
+
+- Use: `date "+%Y-%m-%d %H:%M"`
+- Required for:
+  - Plan updates
+  - Status updates
+  - Progress tracking
+  - Documentation timestamps
+- Never manually write or assume timestamps
+- Always use 24-hour format
+- Always include both date and time
+
+### 1.2 Example Usage
+
+```markdown
+### $(date "+%Y-%m-%d %H:%M") - Feature Update
+
+- ✓ Completed: Task details
+- 🤔 Decisions: Decision details
+- ❌ Issues: Issue details
+- ⏭️ Next: Next steps
+```
+
+### 1.3 Timestamp Guidelines
+
+- Use consistent format across all documents
+- Include timezone if working across timezones
+- Update timestamps in real-time
+- Never backdate or forward-date entries
+- Always fetch new timestamp for each update
+
+## 2. Implementation in Task Plans
+
+### 2.1 Current Status Format
+
+```markdown
+## Current Status
+
+### YYYY-MM-DD HH:mm
+
+**Status**: {In Progress/Blocked/Completed}
+
+- What's working: {current state}
+- What's not: {current issues}
+- Blocking issues: {if any}
+- Next actions: {immediate next steps}
+- Documentation updates needed:
+  - [ ] Feature documentation changes
+  - [ ] API documentation updates
+  - [ ] Component documentation revisions
+  - [ ] Test documentation updates
+  - [ ] Architecture documentation changes
+```
+
+### 2.2 Progress History Format
+
+```markdown
+## Progress History
+
+### YYYY-MM-DD HH:mm - {Brief Title}
+
+- ✓ Completed: Specific work completed
+- 🤔 Decisions: Why we chose X over Y
+- ❌ Issues: Problems hit and how we solved them
+- 📚 Documentation: Documentation changes made or needed
+- ⏭️ Led to: What this enabled/unblocked
+```
+
+## 3. Documentation Updates
+
+### 3.1 Update Format
+
+```markdown
+### YYYY-MM-DD HH:mm - Brief Title
+
+Update Type: [Feature|Fix|Security|Type|API]
+Task: [task-id]
+
+Changes:
+
+- Added X
+- Updated Y
+- Fixed Z
+
+Note: See [related-doc] for details.
+```
+
+### 3.2 Change Tracking
+
+- Must include timestamp
+- Must reference task/issue number
+- Must preserve existing content
+- Must not duplicate information
+- Must follow existing format
+
+## 4. Version Control Integration
+
+### 4.1 Commit Messages
+
+```bash
+# Get current timestamp
+TIMESTAMP=$(date "+%Y-%m-%d %H:%M")
+
+# Use in commit message
+git commit -m "docs(task): update task-123 status at $TIMESTAMP"
+```
+
+### 4.2 Branch Naming
+
+```bash
+# Include date in branch names
+git checkout -b docs/task/auth-update-$(date +%Y%m%d)
+```
+
+## 5. Automation Scripts
+
+### 5.1 Timestamp Helper
+
+```bash
+#!/bin/bash
+# scripts/get-timestamp.sh
+
+# Get current timestamp in standard format
+date "+%Y-%m-%d %H:%M"
+```
+
+### 5.2 Documentation Update Helper
+
+```bash
+#!/bin/bash
+# scripts/update-doc-timestamp.sh
+
+# Update timestamp in documentation files
+TIMESTAMP=$(date "+%Y-%M-%d %H:%M")
+sed -i "s/### YYYY-MM-DD HH:mm/### $TIMESTAMP/" "$1"
+```
+
+## 6. Best Practices
+
+### 6.1 Before Starting Work
+
+```bash
+# Always get current timestamp before starting
+TIMESTAMP=$(date "+%Y-%m-%d %H:%M")
+echo "Starting work at: $TIMESTAMP"
+```
+
+### 6.2 During Development
+
+- Update timestamps when making changes
+- Use consistent format across all files
+- Include timestamps in all status updates
+- Document time spent on tasks
+
+### 6.3 Before Committing
+
+```bash
+# Update final timestamp before commit
+FINAL_TIMESTAMP=$(date "+%Y-%m-%d %H:%M")
+echo "Completing work at: $FINAL_TIMESTAMP"
+```
+
+## 7. Time Tracking
+
+### 7.1 Task Duration
+
+```markdown
+### YYYY-MM-DD HH:mm - Task Started
+- Started: YYYY-MM-DD HH:mm
+- Estimated duration: X hours
+
+### YYYY-MM-DD HH:mm - Task Completed
+- Completed: YYYY-MM-DD HH:mm
+- Actual duration: X hours
+- Time spent: X hours Y minutes
+```
+
+### 7.2 Break Tracking
+
+```markdown
+### YYYY-MM-DD HH:mm - Break Started
+- Break type: [Lunch|Coffee|Meeting]
+- Duration: X minutes
+
+### YYYY-MM-DD HH:mm - Break Ended
+- Total break time: X minutes
+- Resuming work
+```
+
+## 8. Timezone Considerations
+
+### 8.1 Working Across Timezones
+
+```bash
+# Include timezone in timestamps
+date "+%Y-%m-%d %H:%M %Z"
+
+# Example output: 2024-03-20 14:30 EST
+```
+
+### 8.2 UTC Standard
+
+```bash
+# Use UTC for global projects
+date -u "+%Y-%m-%d %H:%M UTC"
+
+# Example output: 2024-03-20 19:30 UTC
+```
+
+## 9. Validation Rules
+
+### 9.1 Timestamp Validation
+
+- Must be in YYYY-MM-DD HH:mm format
+- Must be current (not future or past)
+- Must include both date and time
+- Must use 24-hour format
+- Must be consistent across documents
+
+### 9.2 Format Validation
+
+```bash
+# Validate timestamp format
+validate_timestamp() {
+    local timestamp="$1"
+    if [[ $timestamp =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}$ ]]; then
+        echo "Valid timestamp: $timestamp"
+    else
+        echo "Invalid timestamp format: $timestamp"
+        exit 1
+    fi
+}
+```
+
+## 10. Integration with Other Rules
+
+### 10.1 Task Plan Templates
+
+- All task plans must include timestamps
+- Progress history must be chronological
+- Status updates must include current time
+- Documentation updates must be timestamped
+
+### 10.2 Memory Management
+
+- Working memory updates must be timestamped
+- Project memory changes must include dates
+- Documentation memory must track update times
+- Cross-references must include timestamps
+
+### 10.3 Version Control
+
+- Commit messages should include timestamps
+- Branch names can include dates
+- Tags should include version dates
+- Release notes must include release dates
+
+## 11. Tools and Utilities
+
+### 11.1 Command Line Tools
+
+```bash
+# Quick timestamp
+alias now='date "+%Y-%m-%d %H:%M"'
+
+# Timestamp with timezone
+alias nowtz='date "+%Y-%m-%d %H:%M %Z"'
+
+# UTC timestamp
+alias nowutc='date -u "+%Y-%m-%d %H:%M UTC"'
+```
+
+### 11.2 Scripts
+
+```bash
+#!/bin/bash
+# scripts/update-all-timestamps.sh
+
+# Update timestamps in all documentation files
+find docs/ -name "*.md" -exec sed -i "s/### YYYY-MM-DD HH:mm/### $(date '+%Y-%m-%d %H:%M')/" {} \;
+```
+
+## 12. Remember
+
+- Run date command before each plan/status update
+- Use exact command output
+- Don't modify or format the timestamp
+- Include both date and time for all entries
+- Never assume or manually write timestamps
+- Always fetch new timestamp for each update
+- Use consistent format across all documents
+- Include timezone when working across timezones

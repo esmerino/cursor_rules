@@ -1,0 +1,392 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Version Control Integration
+
+## Overview
+
+Standards and practices for integrating version control with documentation and memory management systems.
+
+<rule>
+name: version_control_integration
+description: Standards for version control integration with documentation and memory management
+version: 1.0.0
+author: Development Team
+date: 2024-01-01
+globs: ["docs/**/*", ".git/**/*", "**/*.md"]
+tags:
+  - git
+  - version-control
+  - documentation
+  - memory-management
+</rule>
+
+## 1. Memory File Version Control
+
+### 1.1 Commit Patterns
+
+- Prefix memory-related commits with `docs(memory)`
+- Include task ID in commit message
+- Reference affected memory types
+- Example: `docs(memory): update task-123 working memory`
+
+### 1.2 Plan Updates
+
+- Commit plan.md changes separately
+- Use `docs(plan)` prefix
+- Include change summary
+- Example: `docs(plan): update project milestones for Q2`
+
+### 1.3 Documentation Changes
+
+- Use `docs(type)` prefix
+- Specify documentation type
+- Include change scope
+- Example: `docs(tech): update API authentication docs`
+
+## 2. Branch Management
+
+### 2.1 Memory Branches
+
+- Format: `docs/memory/{task-id}`
+- Short-lived, task-specific
+- Merge after task completion
+- Example: `docs/memory/auth-update-20240320`
+
+### 2.2 Documentation Branches
+
+- Format: `docs/{type}/{feature}`
+- Type: tech, project, standards
+- Feature: specific area of change
+- Example: `docs/tech/auth-flow`
+
+### 2.3 Plan Branches
+
+- Format: `docs/plan/{milestone}`
+- Used for major plan updates
+- Requires review before merge
+- Example: `docs/plan/q2-roadmap`
+
+## 3. Version Tagging
+
+### 3.1 Documentation Releases
+
+- Format: `docs/v{major}.{minor}`
+- Major: Breaking changes
+- Minor: Feature additions
+- Example: `docs/v1.2`
+
+### 3.2 Memory Snapshots
+
+- Format: `memory/{YYYY-MM}`
+- Monthly snapshots
+- Archive old working memory
+- Example: `memory/2024-03`
+
+### 3.3 Plan Milestones
+
+- Format: `plan/{milestone}`
+- Track major project phases
+- Link to documentation versions
+- Example: `plan/phase-1`
+
+## 4. Cross-Reference System
+
+### 4.1 Reference Types
+
+#### Task References
+
+- Format: `[task-id]`
+- Links to task plans
+- Indicates dependencies
+- Example: `[auth-update-20240320]`
+
+#### Documentation Links
+
+- Use relative paths
+- Format: `[title](mdc:path/to/doc.md)`
+- Include section anchors
+- Example: `[Auth Flow](mdc:docs/technical/auth-flow.md#session-management)`
+
+#### Component References
+
+- Format: `{component-type}/{name}`
+- Links to implementation
+- Example: `ui/auth-form`
+
+### 4.2 Reference Relationships
+
+#### Task Dependencies
+
+```markdown
+## Dependencies
+
+- Blocks: [task-id-1], [task-id-2]
+- Blocked by: [task-id-3]
+- Related: [task-id-4]
+```
+
+#### Documentation Hierarchy
+
+```markdown
+## Related Documentation
+
+- Parent: [System Overview](mdc:docs/system.md)
+- Children:
+  - [Component A](mdc:docs/components/a.md)
+  - [Component B](mdc:docs/components/b.md)
+```
+
+#### Implementation Links
+
+```markdown
+## Implementation
+
+- Component: {ui/auth-form}
+- Tests: {tests/auth-form.test.tsx}
+- Types: {types/auth.ts}
+```
+
+### 4.3 Reference Management
+
+#### Link Validation
+
+- Check broken links monthly
+- Update references on file moves
+- Remove obsolete links
+- Keep paths relative
+
+#### Dependency Tracking
+
+- Update task dependencies daily
+- Mark completed dependencies
+- Note blocking relationships
+- Track circular dependencies
+
+#### Reference Documentation
+
+- Document all reference types
+- Keep examples current
+- Note deprecated references
+- Track reference patterns
+
+## 5. Commit Guidelines
+
+### 5.1 When to Commit
+
+- After completing a significant feature
+- After fixing a bug
+- After refactoring code
+- After updating documentation
+- After adding tests
+- After any significant change that works independently
+
+### 5.2 Commit Message Structure
+
+```
+type(scope): brief description
+
+- Detailed point 1
+- Detailed point 2
+```
+
+### 5.3 Types
+
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation changes
+- style: Code style changes
+- refactor: Code refactoring
+- test: Adding tests
+- chore: Maintenance tasks
+
+### 5.4 Example Commits
+
+```
+feat(auth): implement Supabase authentication
+fix(dashboard): resolve data loading issue
+docs(api): update endpoint documentation
+style(components): improve button styling
+docs(memory): update task-123 working memory
+docs(plan): update project milestones for Q2
+```
+
+## 6. Git Practices
+
+### 6.1 Basic Commands
+
+- Use conventional commits
+- Format: `git add . && git commit -m "type(scope): description" && git push`
+- Always include scope
+- Write clear descriptions
+- Commit after significant work is completed and tested
+- Include related changes in a single commit
+- Keep commits focused and atomic
+- Reference issue numbers if applicable
+- Push changes after committing
+
+### 6.2 Branch Workflow
+
+```bash
+# Create feature branch
+git checkout -b docs/feature/auth-update-20240320
+
+# Make changes and commit
+git add .
+git commit -m "docs(auth): update authentication documentation"
+
+# Push branch
+git push origin docs/feature/auth-update-20240320
+
+# Create pull request
+# Merge after review
+```
+
+### 6.3 Merge Strategies
+
+- Use squash merge for feature branches
+- Keep commit history clean
+- Include meaningful merge messages
+- Reference related issues/PRs
+- Update documentation after merge
+
+## 7. File Organization
+
+### 7.1 Documentation Structure
+
+```
+/docs/
+├── working-memory/           # Active context
+│   ├── open/                # Active tasks
+│   │   └── {task-id}/      # Task-specific directory
+│   │       └── .plan       # Task plan
+│   └── done/               # Completed tasks
+├── templates/              # Project templates
+│   └── feature/           # Feature documentation templates
+│       ├── README.md
+│       ├── api.md
+│       ├── architecture.md
+│       ├── components.md
+│       └── testing.md
+└── cursor_settings.md     # Cursor IDE settings
+```
+
+### 7.2 Version Control Integration
+
+- Track all documentation changes
+- Use meaningful commit messages
+- Maintain branch organization
+- Regular backups and snapshots
+- Archive old documentation
+
+## 8. Automation
+
+### 8.1 Pre-commit Hooks
+
+```bash
+#!/bin/sh
+# .git/hooks/pre-commit
+
+# Check for broken links in documentation
+find docs/ -name "*.md" -exec grep -l "\[.*\](" {} \; | while read file; do
+  # Link validation logic
+done
+
+# Check for proper commit message format
+commit_msg=$(cat "$1")
+if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore)\([a-z-]+\): .+"; then
+  echo "Commit message must follow conventional commit format"
+  exit 1
+fi
+```
+
+### 8.2 Post-commit Hooks
+
+```bash
+#!/bin/sh
+# .git/hooks/post-commit
+
+# Update documentation index
+./scripts/update-docs-index.sh
+
+# Generate changelog
+./scripts/generate-changelog.sh
+```
+
+## 9. Best Practices
+
+### 9.1 Documentation Versioning
+
+- Version all documentation changes
+- Maintain changelog
+- Tag releases appropriately
+- Archive old versions
+- Track breaking changes
+
+### 9.2 Memory Management
+
+- Regular memory snapshots
+- Archive completed tasks
+- Maintain task relationships
+- Track documentation debt
+- Update cross-references
+
+### 9.3 Quality Assurance
+
+- Review all documentation changes
+- Validate links and references
+- Check for consistency
+- Update related documentation
+- Test documentation examples
+
+## 10. Tools and Scripts
+
+### 10.1 Documentation Tools
+
+```bash
+# Update documentation index
+#!/bin/bash
+# scripts/update-docs-index.sh
+
+find docs/ -name "*.md" -exec echo "- [{}](mdc:{})" \; > docs/README.md
+```
+
+### 10.2 Link Validation
+
+```bash
+# Validate documentation links
+#!/bin/bash
+# scripts/validate-links.sh
+
+find docs/ -name "*.md" -exec markdown-link-check {} \;
+```
+
+### 10.3 Changelog Generation
+
+```bash
+# Generate changelog from commits
+#!/bin/bash
+# scripts/generate-changelog.sh
+
+git log --oneline --grep="^docs" --since="1 month ago" > docs/CHANGELOG.md
+```
+
+## 11. Monitoring and Maintenance
+
+### 11.1 Regular Tasks
+
+- Monthly link validation
+- Quarterly documentation review
+- Annual version cleanup
+- Continuous dependency tracking
+- Regular backup verification
+
+### 11.2 Metrics
+
+- Documentation coverage
+- Link health
+- Update frequency
+- Review completion rate
+- User feedback integration
