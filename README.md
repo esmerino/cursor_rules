@@ -30,7 +30,6 @@ This repository contains a curated set of development rules designed to enhance 
 1. **Development Standards**
 
    - Rails 8 specific guidelines
-   - ViewComponent patterns
    - Tailwind CSS v4 standards
    - Auto-formatting rules
 
