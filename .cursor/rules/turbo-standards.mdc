@@ -1,0 +1,98 @@
+---
+name: turbo_standards
+description: Diretrizes para o uso de Turbo (Stream, Frame, Drive) para construir interfaces dinâmicas.
+version: 1.0.0
+author: Esmerino
+date: 2025-06-22
+globs:
+  - "app/views/**/*.html.erb"
+  - "app/controllers/**/*.rb"
+tags:
+  - rails
+  - hotwire
+  - turbo
+---
+
+# Padrões Turbo
+# Exige o uso de Turbo para criar experiências dinâmicas, semelhantes a SPAs.
+
+<rule>
+name: turbo_standards
+description: Diretrizes para o uso de Turbo (Stream, Frame, Drive) para construir interfaces dinâmicas.
+filters:
+  # Sugere Turbo em vez de recargas de página inteira nos controllers
+  - type: file_path
+    pattern: "app/controllers/.*\\.rb$"
+    content_pattern: "redirect_to"
+
+  # Sugere Turbo para formulários e links que poderiam usar frames
+  - type: file_path
+    pattern: "app/views/.*\\.erb$"
+    content_pattern: "(form_with|link_to)"
+actions:
+  - type: suggest
+    message: |
+      **Padrões Turbo: Construindo Interfaces Dinâmicas**
+
+      Para criar experiências de usuário rápidas, dinâmicas e semelhantes a SPAs, utilize a stack Hotwire/Turbo. Evite recargas de página inteira e prefira o Turbo para atualizações direcionadas.
+
+      **1. Turbo Drive:**
+         - Ativado por padrão. Intercepta cliques em links e submissões de formulários, tratando-os sem recarregar a página inteira.
+         - Garanta que a estrutura da sua aplicação seja compatível com o Drive. Trate eventos `turbo:load` para inicialização de JavaScript.
+
+      **2. Turbo Frames (`<turbo-frame>`):**
+         - Use a tag `turbo-frame` para envolver seções independentes de uma página.
+         - Links e formulários dentro de um frame atualizarão apenas o conteúdo desse frame.
+         - Ideal para modais, abas e edição inline.
+         - Exemplo:
+           ```html
+           <%# posts/index.html.erb %>
+           <%= turbo_frame_tag "new_post" do %>
+             <%= link_to "Novo Post", new_post_path %>
+           <% end %>
+           <div id="posts">...</div>
+
+           <%# posts/new.html.erb %>
+           <%= turbo_frame_tag "new_post" do %>
+             <%= render "form", post: @post %>
+           <% end %>
+           ```
+
+      **3. Turbo Streams (`<turbo-stream>`):**
+         - Use Turbo Streams para atualizar múltiplas partes da página simultaneamente a partir de uma única requisição (ex: após a submissão de um formulário).
+         - Streams podem ser entregues via Action Cable (WebSockets) ou em resposta a submissões de formulários.
+         - Ações: `append`, `prepend`, `replace`, `update`, `remove`.
+         - Exemplo:
+           ```ruby
+           # posts_controller.rb
+           def create
+             @post = Post.new(post_params)
+             if @post.save
+               respond_to do |format|
+                 format.turbo_stream
+                 format.html { redirect_to posts_path }
+               end
+             else
+               render :new, status: :unprocessable_entity
+             end
+           end
+
+           # posts/create.turbo_stream.erb
+           <%= turbo_stream.append "posts", @post %>
+           <%= turbo_stream.update "new_post", "" %>
+           ```
+
+      **Melhores Práticas:**
+      - **Prefira Turbo Streams para submissões de formulários:** Oferecem mais flexibilidade do que atualizar um único frame.
+      - **Use Turbo Frames para conteúdo independente e carregado de forma tardia (lazy-loaded).**
+      - **Evite `redirect_to` em mutações bem-sucedidas:** Responda com `turbo_stream` para atualizar a página dinamicamente. Se um redirecionamento for necessário, garanta que ele vise um frame específico ou seja tratado corretamente pelo Turbo Drive.
+      - **Projete os controllers para responderem ao formato `TURBO_STREAM`.**
+metadata:
+  priority: high
+  version: 1.0
+  tags:
+    - rails
+    - hotwire
+    - turbo
+    - frontend
+</rule>

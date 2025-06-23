@@ -30,6 +30,7 @@ This repository contains a curated set of development rules designed to enhance 
 1. **Development Standards**
 
    - Rails 8 specific guidelines
+   - Turbo standards for SPAs
    - Tailwind CSS v4 standards
    - Auto-formatting rules
 
