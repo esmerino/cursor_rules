@@ -528,81 +528,208 @@ end
 ### 8.1 Test Setup
 
 ```ruby
-# spec/rails_helper.rb
-RSpec.configure do |config|
-  config.include Devise::Test::ControllerHelpers, type: :controller
-  config.include Devise::Test::IntegrationHelpers, type: :request
-  config.include Devise::Test::IntegrationHelpers, type: :system
+# test/test_helper.rb
+class ActiveSupport::TestCase
+  include Devise::Test::IntegrationHelpers
+  include Devise::Test::ControllerHelpers
+end
+
+class ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+end
+
+class ActionController::TestCase
+  include Devise::Test::ControllerHelpers
 end
 ```
 
 ### 8.2 Controller Tests
 
 ```ruby
-# spec/controllers/posts_controller_spec.rb
-require 'rails_helper'
+# test/controllers/posts_controller_test.rb
+require 'test_helper'
 
-RSpec.describe PostsController, type: :controller do
-  let(:user) { create(:user) }
-  let(:admin) { create(:user, :admin) }
+class PostsControllerTest < ActionController::TestCase
+  def setup
+    @user = users(:one)
+    @admin = users(:admin)
+  end
 
-  describe 'GET #index' do
-    context 'when user is authenticated' do
-      before { sign_in user }
+  test "should get index when user is authenticated" do
+    sign_in @user
+    get :index
+    assert_response :success
+  end
 
-      it 'returns http success' do
-        get :index
-        expect(response).to have_http_status(:success)
-      end
-    end
+  test "should redirect to sign in when user is not authenticated" do
+    get :index
+    assert_redirected_to new_user_session_path
+  end
 
-    context 'when user is not authenticated' do
-      it 'redirects to sign in' do
-        get :index
-        expect(response).to redirect_to(new_user_session_path)
-      end
+  test "should create post when user is admin" do
+    sign_in @admin
+    assert_difference('Post.count') do
+      post :create, params: { post: { title: 'Test', content: 'Content' } }
     end
   end
 
-  describe 'POST #create' do
-    context 'when user is admin' do
-      before { sign_in admin }
-
-      it 'creates a new post' do
-        expect {
-          post :create, params: { post: { title: 'Test', content: 'Content' } }
-        }.to change(Post, :count).by(1)
-      end
+  test "should not create post when user is not admin" do
+    sign_in @user
+    assert_no_difference('Post.count') do
+      post :create, params: { post: { title: 'Test', content: 'Content' } }
     end
+    assert_redirected_to root_path
   end
 end
 ```
 
-### 8.3 System Tests
+### 8.3 Integration Tests
 
 ```ruby
-# spec/system/authentication_spec.rb
-require 'rails_helper'
+# test/integration/authentication_test.rb
+require 'test_helper'
 
-RSpec.describe 'Authentication', type: :system do
-  let(:user) { create(:user) }
+class AuthenticationTest < ActionDispatch::IntegrationTest
+  def setup
+    @user = users(:one)
+  end
 
-  it 'allows user to sign in' do
+  test "should allow user to sign in" do
     visit new_user_session_path
     
-    fill_in 'Email', with: user.email
-    fill_in 'Password', with: user.password
+    fill_in 'Email', with: @user.email
+    fill_in 'Password', with: 'password123'
     click_button 'Sign in'
     
-    expect(page).to have_content('Signed in successfully')
+    assert_text 'Signed in successfully'
   end
 
-  it 'prevents access to protected pages when not signed in' do
+  test "should prevent access to protected pages when not signed in" do
     visit dashboard_path
     
-    expect(page).to have_content('You need to sign in or sign up before continuing')
+    assert_text 'You need to sign in or sign up before continuing'
+  end
+
+  test "should allow user to sign out" do
+    sign_in @user
+    visit root_path
+    
+    click_link 'Sign out'
+    assert_text 'Signed out successfully'
+  end
+
+  test "should redirect to dashboard after successful sign in" do
+    sign_in @user
+    visit root_path
+    
+    assert_current_path dashboard_path
   end
 end
+```
+
+### 8.4 Model Tests
+
+```ruby
+# test/models/user_test.rb
+require 'test_helper'
+
+class UserTest < ActiveSupport::TestCase
+  def setup
+    @user = User.new(
+      email: 'test@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
+      role: 'user'
+    )
+  end
+
+  test "should be valid with valid attributes" do
+    assert @user.valid?
+  end
+
+  test "should require email" do
+    @user.email = nil
+    assert_not @user.valid?
+    assert_includes @user.errors[:email], "can't be blank"
+  end
+
+  test "should require unique email" do
+    @user.save
+    duplicate_user = @user.dup
+    assert_not duplicate_user.valid?
+    assert_includes duplicate_user.errors[:email], "has already been taken"
+  end
+
+  test "should require valid email format" do
+    @user.email = 'invalid-email'
+    assert_not @user.valid?
+    assert_includes @user.errors[:email], "is invalid"
+  end
+
+  test "should require password with minimum length" do
+    @user.password = @user.password_confirmation = 'short'
+    assert_not @user.valid?
+    assert_includes @user.errors[:password], "is too short (minimum is 6 characters)"
+  end
+
+  test "should require password confirmation" do
+    @user.password_confirmation = 'different'
+    assert_not @user.valid?
+    assert_includes @user.errors[:password_confirmation], "doesn't match Password"
+  end
+
+  test "should have admin role method" do
+    @user.role = 'admin'
+    assert @user.admin?
+  end
+
+  test "should have moderator role method" do
+    @user.role = 'moderator'
+    assert @user.moderator?
+  end
+
+  test "should have user role method" do
+    @user.role = 'user'
+    assert_not @user.admin?
+    assert_not @user.moderator?
+  end
+
+  test "should validate password complexity" do
+    @user.password = @user.password_confirmation = 'simple'
+    assert_not @user.valid?
+    assert_includes @user.errors[:password], 'must include at least one lowercase letter, one uppercase letter, and one digit'
+  end
+end
+```
+
+### 8.5 Fixtures
+
+```yaml
+# test/fixtures/users.yml
+one:
+  email: user@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: 0
+  confirmed_at: <%= Time.current %>
+
+admin:
+  email: admin@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: 2
+  confirmed_at: <%= Time.current %>
+
+moderator:
+  email: moderator@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: 1
+  confirmed_at: <%= Time.current %>
+
+unconfirmed:
+  email: unconfirmed@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'password123') %>
+  role: 0
+  confirmation_token: <%= SecureRandom.hex %>
+  confirmation_sent_at: <%= Time.current %>
 ```
 
 ## 9. Monitoring and Logging
